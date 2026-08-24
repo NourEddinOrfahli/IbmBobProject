@@ -1,0 +1,6 @@
+{
+  "/interpreter/page": "app/interpreter/page.js",
+  "/stories/page": "app/stories/page.js",
+  "/page": "app/page.js",
+  "/chat/page": "app/chat/page.js"
+}

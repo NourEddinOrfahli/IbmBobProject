@@ -1,0 +1,769 @@
+
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Task 2 — Pro Max Space Dashboard: Investigation Report</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #ffffff;
+    color: #1f2328;
+    padding: 32px 16px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 32px 0 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; color: #1f2328; }
+  h3 { font-size: 13px; font-weight: 700; margin: 16px 0 6px; color: #3b82d4; }
+  h4 { font-size: 13px; font-weight: 600; margin: 10px 0 4px; color: #57606a; }
+
+  .subtitle { color: #57606a; font-size: 13px; margin-bottom: 24px; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .badge-gray { background: #f3f4f6; color: #374151; }
+
+  .callout {
+    background: #f7f8fa;
+    border-left: 3px solid #3b82d4;
+    padding: 10px 14px;
+    border-radius: 0 4px 4px 0;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+  .callout.warn { border-color: #f59e0b; background: #fffbeb; }
+  .callout.success { border-color: #22c55e; background: #f0fdf4; }
+  .callout.danger { border-color: #ef4444; background: #fef2f2; }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th { background: #f7f8fa; text-align: left; padding: 7px 10px; border: 1px solid #e5e7eb; font-weight: 600; }
+  td { padding: 6px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  code {
+    font-family: "Consolas", "Fira Mono", monospace;
+    font-size: 12px;
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #d63384;
+  }
+  pre {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 12px;
+    font-family: "Consolas", "Fira Mono", monospace;
+    overflow-x: auto;
+    margin: 8px 0;
+    line-height: 1.5;
+    color: #1f2328;
+  }
+  ul, ol { padding-left: 20px; margin: 6px 0; }
+  li { margin: 3px 0; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+  .card {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .card .card-title { font-weight: 700; margin-bottom: 6px; font-size: 13px; }
+
+  .section-number {
+    display: inline-block;
+    background: #1f2328;
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    text-align: center;
+    line-height: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 7px;
+    vertical-align: middle;
+  }
+  .divider { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+  .right-to-left { direction: rtl; font-size: 13px; color: #57606a; }
+
+  .tree {
+    font-family: "Consolas","Fira Mono",monospace;
+    font-size: 12px;
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 12px 14px;
+    line-height: 1.7;
+  }
+  .confirm-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+
+  @media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+    font-size: 12px;
+    color: #57606a;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>🚀 Task 2 — Pro Max Morning Space Dashboard</h1>
+  <div class="subtitle">READ-ONLY Investigation Report · Space Interpreter · IBM Bob</div>
+
+  <div class="confirm-box">
+    <strong>✅ Confirmation:</strong> This is a read-only investigation. <strong>Zero files were modified, created, or deleted</strong> during the production of this report. No packages were installed. No code was generated for production use.
+  </div>
+
+  
+  <h2><span class="section-number">1</span> Existing Frontend Architecture</h2>
+
+  <div class="callout danger">
+    <strong>Finding: No frontend exists.</strong> The project root contains only a Python/FastAPI backend and no frontend directory, package.json, Next.js config, or any HTML/CSS/JS files outside of the virtual environment's internal packages.
+  </div>
+
+  <table>
+    <tr><th>Aspect</th><th>Finding</th></tr>
+    <tr><td>Framework</td><td><span class="badge badge-red">NONE</span> — No frontend framework is installed or scaffolded</td></tr>
+    <tr><td>Routing</td><td><span class="badge badge-red">NONE</span> — No routes exist</td></tr>
+    <tr><td>Styling system</td><td><span class="badge badge-red">NONE</span> — No CSS framework configured</td></tr>
+    <tr><td>Tailwind</td><td><span class="badge badge-red">NONE</span> — Not present</td></tr>
+    <tr><td>API/client utilities</td><td><span class="badge badge-red">NONE</span> — No HTTP client layer</td></tr>
+    <tr><td>Existing components</td><td><span class="badge badge-red">NONE</span> — Zero React/Vue/Svelte components</td></tr>
+    <tr><td>Animations</td><td><span class="badge badge-red">NONE</span> — Not applicable</td></tr>
+    <tr><td>Design system</td><td><span class="badge badge-red">NONE</span> — To be established</td></tr>
+    <tr><td>Responsive behavior</td><td><span class="badge badge-red">NONE</span> — Not implemented</td></tr>
+    <tr><td>Homepage</td><td><span class="badge badge-red">NONE</span> — Does not exist</td></tr>
+  </table>
+
+  <p>The project plan documented in <code>New folder/المشروع كامل بدون اضافات.txt</code> explicitly identifies a <code>/frontend</code> directory using Next.js + React + Tailwind CSS as the intended technology. This aligns with the IBM AI Builders Challenge documentation that lists <em>"Python, Node.js, React, and Next.js"</em> as encouraged technologies.</p>
+  <p>The project must therefore be created from scratch as a <strong>greenfield Next.js application</strong>.</p>
+
+  
+  <h2><span class="section-number">2</span> Existing Backend API Contracts</h2>
+
+  <h3>GET /api/daily-news</h3>
+  <p>Returns the full AI-generated Arabic space story for today's NASA APOD. This is the primary data source for the dashboard.</p>
+  <pre>{
+  "success": true,
+  "data": {
+    "title": "string (Arabic, ≤10 words)",
+    "summary": "string (Arabic, 2–3 sentences)",
+    "scientific_explanation": "string (Arabic, 3–5 scientific sentences)",
+    "key_facts": ["string", "string", "string"],
+    "why_it_matters": "string (Arabic, 2–3 sentences)",
+    "story": "string (Arabic narrative, 100–150 words)",
+    "source_data": {
+      "source": "NASA APOD",
+      "date": "YYYY-MM-DD",
+      "title": "string (original English APOD title)"
+    },
+    "confidence": "high | medium | low",
+    "language": "ar"
+  }
+}</pre>
+
+  <div class="callout warn">
+    <strong>Important — Image URL:</strong> The backend's <code>NASAAPODData</code> model has <code>image_url</code> and <code>hd_image_url</code> fields from the NASA APOD response. However, <strong>these fields are NOT currently passed through to the <code>SpaceStory</code> output or <code>source_data</code></strong>. Only <code>source</code>, <code>date</code>, and <code>title</code> are guaranteed in <code>source_data</code>. The frontend must NOT assume an image URL is present.
+  </div>
+
+  <h3>GET /api/daily-news/status</h3>
+  <p>Returns safe scheduler and bulletin lifecycle metadata. No secrets.</p>
+  <pre>{
+  "success": true,
+  "data": {
+    "scheduler": {
+      "enabled": boolean,
+      "last_run": "ISO-8601 UTC string | null",
+      "last_success": "ISO-8601 UTC string | null",
+      "apod_date": "YYYY-MM-DD | null",
+      "status": "success | failed | skipped | null"
+    },
+    "latest_bulletin": {
+      "apod_date": "YYYY-MM-DD",
+      "status": "success | failed",
+      "generated_at": "ISO-8601 UTC string"
+    } | null
+  }
+}</pre>
+
+  <h3>GET /health</h3>
+  <pre>{ "status": "ok" }</pre>
+
+  <h3>Error shape (all endpoints)</h3>
+  <pre>{
+  "success": false,
+  "error": {
+    "code": "string (e.g. AI_NOT_CONFIGURED, NASA_TIMEOUT)",
+    "message": "string (human-readable, safe to display)"
+  }
+}</pre>
+
+  <h3>Known error codes the frontend must handle</h3>
+  <table>
+    <tr><th>Code</th><th>HTTP status</th><th>Cause</th></tr>
+    <tr><td><code>AI_NOT_CONFIGURED</code></td><td>503</td><td>OpenRouter key missing</td></tr>
+    <tr><td><code>NASA_TIMEOUT</code></td><td>502</td><td>NASA API timed out</td></tr>
+    <tr><td><code>NASA_RATE_LIMIT</code></td><td>502</td><td>NASA rate limit</td></tr>
+    <tr><td><code>NASA_MISSING_FIELDS</code></td><td>502</td><td>APOD missing title/explanation</td></tr>
+    <tr><td><code>AI_TIMEOUT</code></td><td>502</td><td>OpenRouter timed out</td></tr>
+    <tr><td><code>AI_RATE_LIMIT</code></td><td>502</td><td>OpenRouter rate limit</td></tr>
+    <tr><td><code>AI_JSON_PARSE_ERROR</code></td><td>502</td><td>Model returned malformed JSON</td></tr>
+    <tr><td><code>VALIDATION_ERROR</code></td><td>502</td><td>Model output failed schema</td></tr>
+    <tr><td><code>INTERNAL_ERROR</code></td><td>500</td><td>Unexpected server error</td></tr>
+  </table>
+
+  <h3>CORS</h3>
+  <p>Backend has <code>allow_origins=["*"]</code> — the frontend can call it from any origin in development. For production, this should be tightened but does not block dashboard development.</p>
+
+  <h3>Backend runtime notes</h3>
+  <ul>
+    <li>Backend runs at <code>http://localhost:8000</code> (uvicorn, from <code>backend/</code> directory)</li>
+    <li>The <code>/api/daily-news</code> call is <strong>not instant</strong> — it triggers a live NASA API call + AI model call at request time. Typical latency: 5–30 seconds.</li>
+    <li>The scheduler caches a bulletin to disk in <code>bulletin_store.json</code> — but <code>/api/daily-news</code> does <em>not</em> serve from the store; it always re-generates. The store is only consulted by the scheduler for idempotency.</li>
+    <li>This means the frontend must handle long loading times gracefully.</li>
+  </ul>
+
+  
+  <h2><span class="section-number">3</span> Missing Backend Capabilities (Risks)</h2>
+
+  <table>
+    <tr><th>Gap</th><th>Impact</th><th>Recommendation</th></tr>
+    <tr>
+      <td>No APOD image URL in API response</td>
+      <td><span class="badge badge-yellow">Medium</span> Dashboard cannot display NASA imagery</td>
+      <td>Request backend to expose <code>source_data.image_url</code> and <code>source_data.media_type</code> (from <code>NASAAPODData</code>) in <code>_ensure_source_data()</code>. This is a trivial one-line addition. <strong>Do not implement yet — report it here.</strong></td>
+    </tr>
+    <tr>
+      <td>No cached-bulletin endpoint</td>
+      <td><span class="badge badge-yellow">Medium</span> Every page load triggers a 5–30s generation call</td>
+      <td>Consider exposing <code>GET /api/daily-news/latest</code> to serve from the bulletin store. <strong>Do not implement yet.</strong></td>
+    </tr>
+    <tr>
+      <td>No copyright field in API response</td>
+      <td><span class="badge badge-gray">Low</span> NASA APOD images sometimes have copyright restrictions</td>
+      <td>Request that <code>source_data.copyright</code> be passed through. <strong>Do not implement yet.</strong></td>
+    </tr>
+  </table>
+
+  
+  <h2><span class="section-number">4</span> Proposed Frontend Architecture</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Framework</div>
+      Next.js 14+ (App Router)<br />React 18+<br />TypeScript
+    </div>
+    <div class="card">
+      <div class="card-title">Styling</div>
+      Tailwind CSS v3<br />CSS Variables for dark theme<br />No heavy animation library
+    </div>
+    <div class="card">
+      <div class="card-title">HTTP Client</div>
+      Native <code>fetch()</code> or <code>axios</code> in a typed API client module<br />No extra state management library needed
+    </div>
+    <div class="card">
+      <div class="card-title">State</div>
+      React <code>useState</code> + <code>useEffect</code><br />No Redux/Zustand needed<br />SWR or React Query for data fetching (optional)
+    </div>
+  </div>
+
+  <p>The frontend is a <strong>single-page application</strong> with no server-side rendering requirements initially. It is a pure presentation layer that fetches from the existing FastAPI backend.</p>
+
+  
+  <h2><span class="section-number">5</span> Proposed Component Tree</h2>
+
+  <div class="tree">frontend/
+├── app/
+│   ├── layout.tsx              ← Root layout (meta, fonts, dark bg)
+│   ├── page.tsx                ← Homepage (composes dashboard)
+│   └── globals.css             ← CSS variables, dark palette, base styles
+│
+├── components/
+│   ├── dashboard/
+│   │   ├── MorningBulletinHero.tsx     ← Section A: Hero
+│   │   ├── ScientificStory.tsx         ← Section B: Scientific content
+│   │   ├── LiveStatus.tsx              ← Section C: Scheduler status
+│   │   └── SpaceDashboard.tsx          ← Orchestrator (fetches, manages state)
+│   │
+│   ├── states/
+│   │   ├── BulletinSkeleton.tsx        ← Loading skeleton
+│   │   ├── BulletinError.tsx           ← Error state (Arabic)
+│   │   └── BulletinEmpty.tsx           ← Empty/unavailable state (Arabic)
+│   │
+│   └── ui/
+│       ├── ConfidenceBadge.tsx         ← high/medium/low badge
+│       ├── KeyFact.tsx                 ← Single key fact item
+│       ├── SectionDivider.tsx          ← Visual spacer
+│       └── APODSourceAttribution.tsx   ← NASA source + date tag
+│
+├── lib/
+│   ├── api.ts                  ← Typed fetch wrappers for backend endpoints
+│   └── types.ts                ← TypeScript interfaces matching backend models
+│
+└── hooks/
+    ├── useDailyNews.ts         ← Fetch + state management for /api/daily-news
+    └── useBulletinStatus.ts    ← Fetch + state for /api/daily-news/status</div>
+
+  
+  <h2><span class="section-number">6</span> TypeScript Type Definitions (from Backend Contract)</h2>
+
+  <pre>// lib/types.ts
+
+export interface SpaceStory {
+  title: string;
+  summary: string;
+  scientific_explanation: string;
+  key_facts: string[];
+  why_it_matters: string;
+  story: string;
+  source_data: {
+    source: string;       // Always "NASA APOD"
+    date: string;         // "YYYY-MM-DD"
+    title: string;        // Original English APOD title
+    // image_url?: string; // NOT currently in API — do not assume
+  };
+  confidence: 'high' | 'medium' | 'low';
+  language: string;       // "ar" (may be "en" if Arabic validation failed)
+}
+
+export interface DailyNewsResponse {
+  success: true;
+  data: SpaceStory;
+}
+
+export interface ErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface SchedulerInfo {
+  enabled: boolean;
+  last_run: string | null;
+  last_success: string | null;
+  apod_date: string | null;
+  status: 'success' | 'failed' | 'skipped' | null;
+}
+
+export interface LatestBulletin {
+  apod_date: string;
+  status: 'success' | 'failed';
+  generated_at: string;
+}
+
+export interface StatusResponse {
+  success: true;
+  data: {
+    scheduler: SchedulerInfo;
+    latest_bulletin: LatestBulletin | null;
+  };
+}</pre>
+
+  
+  <h2><span class="section-number">7</span> Data Flow</h2>
+
+  <pre>page.tsx
+  └── SpaceDashboard.tsx
+        ├── useDailyNews() hook
+        │     ├── fetch("GET /api/daily-news")
+        │     ├── states: idle → loading → success | error
+        │     └── returns: { story, loading, error }
+        │
+        ├── useBulletinStatus() hook
+        │     ├── fetch("GET /api/daily-news/status")  [parallel, non-blocking]
+        │     ├── states: idle → loading → success | error
+        │     └── returns: { status, loading, error }
+        │
+        ├── if loading         → &lt;BulletinSkeleton /&gt;
+        ├── if error           → &lt;BulletinError error={error} onRetry={refetch} /&gt;
+        ├── if story is null   → &lt;BulletinEmpty /&gt;
+        └── if story           →
+              ├── &lt;MorningBulletinHero story={story} /&gt;
+              ├── &lt;ScientificStory story={story} /&gt;
+              └── &lt;LiveStatus status={status} /&gt;</pre>
+
+  <p>The two fetch calls (<code>/api/daily-news</code> and <code>/api/daily-news/status</code>) are <strong>parallel and independent</strong>. A failure in the status endpoint must not block or break the main story display.</p>
+
+  
+  <h2><span class="section-number">8</span> UI States</h2>
+
+  <table>
+    <tr><th>State</th><th>Trigger</th><th>Visual treatment</th></tr>
+    <tr>
+      <td><span class="badge badge-blue">LOADING</span></td>
+      <td><code>fetch()</code> in-flight</td>
+      <td>Full-section skeleton: animated pulse blocks matching the hero + story layout. No broken content. Arabic loading hint: <span class="right-to-left">جاري تحميل النشرة الفضائية…</span></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-green">SUCCESS</span></td>
+      <td><code>success: true</code> returned</td>
+      <td>Full dashboard renders with all data from API. No hardcoded fallback content.</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-red">ERROR</span></td>
+      <td>HTTP error or <code>success: false</code></td>
+      <td>Friendly Arabic error card with icon, message, and a "حاول مجدداً" (Retry) button. Message text comes from the API's <code>error.message</code> field when safe, otherwise a generic Arabic message. Error code never shown to users.</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-yellow">EMPTY</span></td>
+      <td>Story is null / not ready</td>
+      <td>Deliberate empty state: Arabic text explaining the bulletin is being prepared. No fake content. No countdown timer (that would require backend data we don't have).</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-purple">DEGRADED</span></td>
+      <td>Status endpoint fails while story succeeds</td>
+      <td>Story renders normally. Live Status section shows a subtle "unavailable" badge. Never blocks the main content.</td>
+    </tr>
+  </table>
+
+  
+  <h2><span class="section-number">9</span> Component Details</h2>
+
+  <h3>A — MorningBulletinHero</h3>
+  <p><strong>Props:</strong> <code>story: SpaceStory</code></p>
+  <ul>
+    <li>Arabic header: <span class="right-to-left">النشرة الفضائية الصباحية</span></li>
+    <li><code>story.title</code> — displayed as the headline (large, Arabic, RTL)</li>
+    <li><code>story.summary</code> — lead paragraph</li>
+    <li><code>story.source_data.date</code> — displayed as APOD date</li>
+    <li><code>story.source_data.source</code> — "NASA APOD" attribution tag</li>
+    <li><code>story.source_data.title</code> — original English APOD title, shown as a subtitle/caption</li>
+    <li>Image placeholder only if backend later exposes <code>image_url</code> — the component must check before rendering any image element</li>
+    <li><code>story.confidence</code> — <code>&lt;ConfidenceBadge&gt;</code> sub-component</li>
+  </ul>
+
+  <h3>B — ScientificStory</h3>
+  <p><strong>Props:</strong> <code>story: SpaceStory</code></p>
+  <ul>
+    <li><code>story.scientific_explanation</code> — expandable section</li>
+    <li><code>story.key_facts[]</code> — rendered as icon-bullet list via <code>&lt;KeyFact&gt;</code></li>
+    <li><code>story.why_it_matters</code> — highlighted block</li>
+    <li><code>story.story</code> — full narrative prose, largest font in the section</li>
+  </ul>
+
+  <h3>C — LiveStatus</h3>
+  <p><strong>Props:</strong> <code>status: StatusResponse['data'] | null</code>, <code>loading: boolean</code></p>
+  <ul>
+    <li><code>scheduler.enabled</code> — on/off badge</li>
+    <li><code>scheduler.apod_date</code> — last processed APOD date</li>
+    <li><code>scheduler.last_success</code> — human-formatted UTC time</li>
+    <li><code>scheduler.status</code> — status badge (success / failed / skipped)</li>
+    <li><code>latest_bulletin.generated_at</code> — last generation time</li>
+    <li>Never renders: API keys, prompts, model names, raw error messages, internal error details</li>
+  </ul>
+
+  
+  <h2><span class="section-number">10</span> Cinematic Dark Space Design System</h2>
+
+  <table>
+    <tr><th>Token</th><th>Value</th><th>Usage</th></tr>
+    <tr><td><code>--bg-space</code></td><td><code>#050a14</code></td><td>Root background — deep space black</td></tr>
+    <tr><td><code>--bg-surface</code></td><td><code>#0d1525</code></td><td>Card/section backgrounds</td></tr>
+    <tr><td><code>--bg-elevated</code></td><td><code>#162035</code></td><td>Highlighted blocks</td></tr>
+    <tr><td><code>--border</code></td><td><code>#1e3050</code></td><td>Card borders, dividers</td></tr>
+    <tr><td><code>--text-primary</code></td><td><code>#e8eef7</code></td><td>Main text</td></tr>
+    <tr><td><code>--text-muted</code></td><td><code>#7a99bf</code></td><td>Secondary text, captions</td></tr>
+    <tr><td><code>--accent-blue</code></td><td><code>#4a9eff</code></td><td>Links, highlights, badges</td></tr>
+    <tr><td><code>--accent-gold</code></td><td><code>#f5c842</code></td><td>Confidence=high, key facts stars</td></tr>
+    <tr><td><code>--accent-green</code></td><td><code>#4ade80</code></td><td>Success status indicators</td></tr>
+    <tr><td><code>--accent-red</code></td><td><code>#f87171</code></td><td>Error indicators</td></tr>
+  </table>
+
+  <p>Typography: <code>-apple-system, "Segoe UI", system-ui, sans-serif</code> for Latin. Arabic text uses system Arabic font stack — no external font downloads needed for MVP.</p>
+  <p>Animations: Tailwind's <code>animate-pulse</code> (built-in) for skeleton only. <strong>No external animation library</strong> (no Framer Motion, no GSAP). A subtle CSS <code>background: radial-gradient</code> on the hero for space atmosphere — no animated particles.</p>
+
+  
+  <h2><span class="section-number">11</span> Responsive Strategy</h2>
+
+  <table>
+    <tr><th>Breakpoint</th><th>Layout</th></tr>
+    <tr><td><code>mobile (&lt;640px)</code></td><td>Single column. Hero full-width. Key facts stacked. Status in collapsible section.</td></tr>
+    <tr><td><code>tablet (640–1024px)</code></td><td>Single column with slightly wider cards. Key facts in 2-col grid.</td></tr>
+    <tr><td><code>desktop (&gt;1024px)</code></td><td>Max-width 900px centered. Key facts in 3-col grid. Status panel in sidebar or footer row.</td></tr>
+  </table>
+  <p>Tailwind breakpoints are used natively. No additional responsive library needed.</p>
+  <p>RTL (<code>dir="rtl"</code>) applied to all Arabic text sections. The layout itself stays LTR; only content sections carrying Arabic text use RTL direction.</p>
+
+  
+  <h2><span class="section-number">12</span> Accessibility Strategy</h2>
+
+  <ul>
+    <li>Semantic HTML: <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;header&gt;</code> used correctly</li>
+    <li><code>lang="ar"</code> on Arabic text containers, <code>dir="rtl"</code> on RTL sections</li>
+    <li><code>aria-label</code> on all icon-only buttons (e.g. retry)</li>
+    <li><code>aria-live="polite"</code> on loading/error regions so screen readers announce state changes</li>
+    <li><code>aria-busy="true"</code> on skeleton container during loading</li>
+    <li>Color contrast: minimum 4.5:1 for body text against dark backgrounds — verified against design tokens above</li>
+    <li>Keyboard navigation: all interactive elements reachable by Tab, visible focus ring</li>
+    <li><code>@media (prefers-reduced-motion: reduce)</code>: disable pulse animations and any transitions</li>
+    <li>Mobile tap targets: minimum 44×44px</li>
+  </ul>
+
+  
+  <h2><span class="section-number">13</span> Performance Strategy</h2>
+
+  <ul>
+    <li><strong>No polling</strong> — <code>/api/daily-news/status</code> is fetched once on mount. Status is a low-value refresh target; no interval timer needed.</li>
+    <li><strong>One request for the main story</strong> — <code>/api/daily-news</code> is called once. A retry button exists for user-initiated retries only.</li>
+    <li><strong>No NASA / OpenRouter calls from frontend</strong> — all data comes through the backend proxy. Zero API keys in frontend code.</li>
+    <li><strong>Lazy loading</strong> — if an image URL is ever added by the backend, use Next.js <code>&lt;Image&gt;</code> with lazy loading.</li>
+    <li><strong>No heavy dependencies</strong> — no chart library, no 3D/WebGL, no particle systems. Tailwind is purged at build time.</li>
+    <li><strong>SWR or React Query optional</strong> — if added, it provides in-memory caching of the story for the browser session, avoiding duplicate calls on navigation. Not required for MVP.</li>
+    <li><strong>Backend latency</strong> — the <code>/api/daily-news</code> call can take 5–30s. The skeleton loading state is critical UX — it must render immediately on page load before the fetch completes.</li>
+  </ul>
+
+  
+  <h2><span class="section-number">14</span> Exact Files to Be Modified</h2>
+  <p>Since no frontend exists, there are <strong>no existing files to modify</strong>. All work is net-new creation.</p>
+
+  <h3>Backend files that may need a minor, scoped change</h3>
+  <table>
+    <tr><th>File</th><th>Change needed</th><th>Scope</th></tr>
+    <tr>
+      <td><code>backend/story_generator.py</code></td>
+      <td>In <code>_ensure_source_data()</code>: add <code>image_url</code>, <code>hd_image_url</code>, <code>media_type</code>, and <code>copyright</code> to <code>source_data</code> dict before returning — so the frontend can display NASA imagery when available</td>
+      <td><span class="badge badge-yellow">Minor</span> — 4 lines in one method</td>
+    </tr>
+  </table>
+  <p><strong>This change is reported here, not implemented.</strong> All other backend files (scheduler, prompts, models, nasa_client, openrouter_provider, config, bulletin_service, bulletin_store) require <strong>no changes</strong>.</p>
+
+  
+  <h2><span class="section-number">15</span> Exact Files to Be Created</h2>
+
+  <div class="tree">frontend/
+├── package.json
+├── tsconfig.json
+├── next.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── .env.local.example              ← NEXT_PUBLIC_API_URL=http://localhost:8000
+│
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── globals.css
+│
+├── components/
+│   ├── dashboard/
+│   │   ├── SpaceDashboard.tsx
+│   │   ├── MorningBulletinHero.tsx
+│   │   ├── ScientificStory.tsx
+│   │   └── LiveStatus.tsx
+│   ├── states/
+│   │   ├── BulletinSkeleton.tsx
+│   │   ├── BulletinError.tsx
+│   │   └── BulletinEmpty.tsx
+│   └── ui/
+│       ├── ConfidenceBadge.tsx
+│       ├── KeyFact.tsx
+│       └── APODSourceAttribution.tsx
+│
+├── lib/
+│   ├── api.ts
+│   └── types.ts
+│
+├── hooks/
+│   ├── useDailyNews.ts
+│   └── useBulletinStatus.ts
+│
+└── __tests__/
+    ├── components/
+    │   ├── MorningBulletinHero.test.tsx
+    │   ├── ScientificStory.test.tsx
+    │   ├── LiveStatus.test.tsx
+    │   ├── BulletinSkeleton.test.tsx
+    │   ├── BulletinError.test.tsx
+    │   └── BulletinEmpty.test.tsx
+    ├── hooks/
+    │   ├── useDailyNews.test.ts
+    │   └── useBulletinStatus.test.ts
+    └── lib/
+        └── api.test.ts</div>
+
+  
+  <h2><span class="section-number">16</span> Dependencies Required</h2>
+
+  <table>
+    <tr><th>Package</th><th>Version</th><th>Reason</th></tr>
+    <tr><td><code>next</code></td><td>^14.x</td><td>App framework</td></tr>
+    <tr><td><code>react</code></td><td>^18.x</td><td>UI library</td></tr>
+    <tr><td><code>react-dom</code></td><td>^18.x</td><td>React DOM renderer</td></tr>
+    <tr><td><code>typescript</code></td><td>^5.x</td><td>Type safety</td></tr>
+    <tr><td><code>tailwindcss</code></td><td>^3.x</td><td>Utility CSS framework</td></tr>
+    <tr><td><code>postcss</code></td><td>^8.x</td><td>Tailwind build pipeline</td></tr>
+    <tr><td><code>autoprefixer</code></td><td>^10.x</td><td>CSS vendor prefixes</td></tr>
+    <tr><td><code>@types/react</code></td><td>^18.x</td><td>React TypeScript types</td></tr>
+    <tr><td><code>@types/node</code></td><td>^20.x</td><td>Node TypeScript types</td></tr>
+  </table>
+
+  <h3>Test dependencies</h3>
+  <table>
+    <tr><th>Package</th><th>Reason</th></tr>
+    <tr><td><code>jest</code></td><td>Test runner</td></tr>
+    <tr><td><code>@testing-library/react</code></td><td>Component tests</td></tr>
+    <tr><td><code>@testing-library/jest-dom</code></td><td>DOM matchers</td></tr>
+    <tr><td><code>jest-environment-jsdom</code></td><td>Browser environment simulation</td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>No animation libraries</strong> (Framer Motion, GSAP, react-spring) are required. Tailwind's built-in <code>animate-pulse</code> is sufficient for the skeleton and space atmosphere is achievable with pure CSS gradients.
+  </div>
+
+  
+  <h2><span class="section-number">17</span> Testing Strategy</h2>
+
+  <h3>Component tests</h3>
+  <table>
+    <tr><th>Component</th><th>Tests needed</th></tr>
+    <tr><td><code>MorningBulletinHero</code></td><td>Renders title, summary, source_data.date, source_data.title. Hides image when image_url absent. Renders confidence badge. RTL direction applied.</td></tr>
+    <tr><td><code>ScientificStory</code></td><td>Renders all key_facts as list items. Renders scientific_explanation. Renders why_it_matters. Renders story. Handles empty key_facts array.</td></tr>
+    <tr><td><code>LiveStatus</code></td><td>Shows scheduler enabled/disabled. Formats dates correctly. Shows null gracefully. Hides when status data unavailable. Never renders API keys.</td></tr>
+    <tr><td><code>BulletinSkeleton</code></td><td>Renders without crashing. Has aria-busy="true". Contains pulse animation elements.</td></tr>
+    <tr><td><code>BulletinError</code></td><td>Renders Arabic error message. Shows retry button. Does not expose error.code to display. Retry callback fires on click.</td></tr>
+    <tr><td><code>BulletinEmpty</code></td><td>Renders Arabic unavailable message. Contains no fake scientific content.</td></tr>
+    <tr><td><code>ConfidenceBadge</code></td><td>Renders correct Arabic label for high/medium/low. Applies correct colour class.</td></tr>
+  </table>
+
+  <h3>Hook tests</h3>
+  <table>
+    <tr><th>Hook</th><th>Tests needed</th></tr>
+    <tr><td><code>useDailyNews</code></td><td>Returns loading=true initially. Returns story on success. Returns error on 4xx/5xx. Returns error when success=false in body. Retry re-fetches.</td></tr>
+    <tr><td><code>useBulletinStatus</code></td><td>Returns loading=true initially. Returns status on success. Handles failure gracefully (does not throw).</td></tr>
+  </table>
+
+  <h3>API client tests</h3>
+  <ul>
+    <li>Correct URL construction from env var</li>
+    <li>Correct parsing of success response shape</li>
+    <li>Correct error thrown on <code>success: false</code> body</li>
+    <li>Correct error thrown on network failure</li>
+  </ul>
+
+  <h3>Integration / E2E (optional, post-MVP)</h3>
+  <ul>
+    <li>Dashboard renders with mocked API returning a full <code>SpaceStory</code> fixture</li>
+    <li>Dashboard renders skeleton while fetch is pending</li>
+    <li>Dashboard renders error state when API returns 503</li>
+    <li>Dashboard renders empty state when story is null</li>
+  </ul>
+
+  <h3>Accessibility checks</h3>
+  <ul>
+    <li><code>jest-axe</code> (optional): automated a11y violations on rendered components</li>
+    <li>Manual keyboard navigation check on desktop</li>
+    <li>Responsive layout check on 375px / 768px / 1280px viewports</li>
+  </ul>
+
+  
+  <h2><span class="section-number">18</span> Data Grounding Rules (Implementation Constraints)</h2>
+
+  <div class="callout danger">
+    <strong>Hard rules for implementation — no exceptions.</strong>
+  </div>
+  <ul>
+    <li>Every field displayed as content MUST come from the backend API response</li>
+    <li>No hardcoded NASA titles, APOD dates, astronomical facts, image URLs</li>
+    <li>No NASA API calls from frontend</li>
+    <li>No OpenRouter API calls from frontend</li>
+    <li>No API keys of any kind in frontend source</li>
+    <li>No AI prompt logic in frontend</li>
+    <li>Error code strings (<code>AI_NOT_CONFIGURED</code> etc.) must not appear in UI text</li>
+    <li>Empty states must use neutral Arabic copy, never fabricated space content</li>
+    <li>Image elements must only render when <code>source_data.image_url</code> is a non-empty string in the response</li>
+  </ul>
+
+  
+  <h2><span class="section-number">19</span> Project Structure After Task 2</h2>
+
+  <div class="tree">space-interpreter/
+├── backend/               ← FastAPI (unchanged)
+├── frontend/              ← NEW — Next.js 14 + React 18 + Tailwind CSS
+├── tests/                 ← Python tests (unchanged)
+├── requirements.txt       ← Python (unchanged)
+├── README.md              ← Will need frontend section added
+└── .env.example           ← Backend env (unchanged)</div>
+
+  
+  <h2><span class="section-number">20</span> Summary of Risks</h2>
+
+  <table>
+    <tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr>
+    <tr>
+      <td>No image URL exposed by backend → hero has no visual image</td>
+      <td><span class="badge badge-yellow">Medium</span></td>
+      <td>Report to backend team. Design hero with graceful image-absent state. Use CSS space gradient as background.</td>
+    </tr>
+    <tr>
+      <td>API response latency 5–30s → poor UX on first load</td>
+      <td><span class="badge badge-yellow">Medium</span></td>
+      <td>Full-section skeleton renders immediately. User sees cinematic loading state, not blank page.</td>
+    </tr>
+    <tr>
+      <td>AI_NOT_CONFIGURED (backend key not set in dev) → 503 on every call</td>
+      <td><span class="badge badge-gray">Low</span></td>
+      <td>Error state renders cleanly. Development can proceed with mock data.</td>
+    </tr>
+    <tr>
+      <td>language field may be "en" not "ar" if model fails Arabic</td>
+      <td><span class="badge badge-gray">Low</span></td>
+      <td>Frontend renders whatever the backend returns. No language-gating in UI.</td>
+    </tr>
+    <tr>
+      <td>No cached bulletin endpoint → every page load hits NASA + AI</td>
+      <td><span class="badge badge-yellow">Medium</span></td>
+      <td>Report to backend team. In short term, session-level caching via SWR prevents re-fetches on tab switch.</td>
+    </tr>
+  </table>
+
+  
+  <h2><span class="section-number">21</span> IBM Bob Traceability Confirmation</h2>
+
+  <div class="callout success">
+    This investigation was performed entirely using IBM Bob as the primary development tool. The full investigation, analysis, report design, component tree, type definitions, and architecture were produced through IBM Bob. All conversations are preserved in the IBM Bob task history. No external tools were used to produce this report.
+  </div>
+
+  <hr class="divider" />
+
+  <div class="confirm-box">
+    <strong>✅ Final Confirmation — NO FILES WERE MODIFIED</strong><br />
+    This report was produced using read-only investigation tools only (file reads, directory listings, symbol analysis). The following files were read: <code>backend/main.py</code>, <code>backend/models.py</code>, <code>backend/story_generator.py</code>, <code>backend/bulletin_service.py</code>, <code>backend/bulletin_store.py</code>, <code>backend/scheduler.py</code>, <code>backend/config.py</code>, <code>backend/nasa_client.py</code>, <code>backend/prompts.py</code>, <code>README.md</code>, <code>requirements.txt</code>, <code>.env.example</code>, and the contents of <code>New folder/</code>. Zero files were written, modified, or deleted. Zero packages were installed.
+  </div>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+</body>
+</html>

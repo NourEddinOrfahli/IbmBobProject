@@ -1,0 +1,266 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TASK 2 — Pro Max Daily Automation</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.6;
+    color: #1f2328; background: #ffffff;
+    max-width: 760px; margin: 0 auto; padding: 32px 24px;
+  }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; color: #1f2328;
+       border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+  h3 { font-size: 13px; font-weight: 600; margin: 16px 0 6px; color: #3b82d4; }
+  p  { margin-bottom: 10px; }
+  ul, ol { padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 4px; }
+  .subtitle { color: #57606a; font-size: 13px; margin-bottom: 24px; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 12px; font-weight: 600; margin-right: 4px;
+  }
+  .green  { background: #dcfce7; color: #166534; }
+  .blue   { background: #dbeafe; color: #1e40af; }
+  .yellow { background: #fef9c3; color: #854d0e; }
+  .purple { background: #ede9fe; color: #5b21b6; }
+  table {
+    width: 100%; border-collapse: collapse; margin-bottom: 16px;
+    font-size: 13px;
+  }
+  th { background: #f7f8fa; text-align: left; padding: 7px 10px;
+       border: 1px solid #e5e7eb; font-weight: 600; }
+  td { padding: 6px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  code {
+    font-family: "Consolas", "Fira Code", monospace;
+    background: #f7f8fa; border: 1px solid #e5e7eb;
+    border-radius: 3px; padding: 1px 5px; font-size: 12px;
+  }
+  pre {
+    background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 6px;
+    padding: 12px 14px; font-size: 12px; overflow-x: auto;
+    font-family: "Consolas", monospace; margin-bottom: 12px;
+  }
+  .result-box {
+    background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;
+    padding: 14px 16px; margin-bottom: 16px;
+  }
+  .warn-box {
+    background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px;
+    padding: 12px 14px; margin-bottom: 12px; font-size: 13px;
+  }
+  .section { margin-bottom: 8px; }
+  footer {
+    margin-top: 48px; padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center; font-size: 12px; color: #57606a;
+  }
+</style>
+</head>
+<body>
+
+<h1>TASK 2 — Pro Max Daily Automation</h1>
+<p class="subtitle">Space Interpreter · Automated Daily Bulletin Pipeline · Implementation Report</p>
+
+
+<h2>1. Architecture Findings (Phase 1)</h2>
+<table>
+  <tr><th>Question</th><th>Finding</th></tr>
+  <tr><td>How does <code>/api/daily-news</code> work?</td>
+      <td>Every request calls <code>StoryGenerator.generate_daily_story()</code> → live NASA APOD fetch → live DONKI fetch → prompt build → OpenRouter LLM → Pydantic validation → JSON response. No caching.</td></tr>
+  <tr><td>APOD cached?</td><td><strong>No.</strong> Live HTTP call on every request.</td></tr>
+  <tr><td>DONKI cached?</td><td><strong>No.</strong> Live HTTP call, non-fatal if it fails.</td></tr>
+  <tr><td>Scheduler / background task?</td><td><strong>None.</strong> Application was purely reactive.</td></tr>
+  <tr><td>Generated story in memory?</td><td><strong>No.</strong> Fully stateless per request.</td></tr>
+  <tr><td>Persistent storage?</td><td><strong>None.</strong> No files, no database.</td></tr>
+  <tr><td>Config values?</td><td><code>NASAConfig</code>, <code>OpenRouterConfig</code>, <code>AppConfig</code> — all env-based via <code>get_config()</code>.</td></tr>
+  <tr><td>Reusable parts?</td><td><code>StoryGenerator</code>, <code>NASAClient</code>, <code>AIProvider</code>/<code>OpenRouterProvider</code>, all prompt functions, all Pydantic models.</td></tr>
+</table>
+
+
+<h2>2. Architecture Chosen</h2>
+<p>
+  <span class="badge blue">APScheduler 3.x</span>
+  <span class="badge green">AsyncIOScheduler</span>
+  <span class="badge purple">JSON File Store</span>
+  <span class="badge yellow">Repository Abstraction</span>
+</p>
+<ul>
+  <li><strong>Scheduler:</strong> <code>APScheduler AsyncIOScheduler</code> with a daily <code>CronTrigger</code>. Pure Python, asyncio-native, no Redis/Celery/Docker. Disabled by default (<code>DAILY_BULLETIN_ENABLED=false</code>).</li>
+  <li><strong>Persistence:</strong> <code>bulletin_store.json</code> — a local JSON file behind a thin <code>BulletinStore</code> repository class. Isolates I/O so a future DB swap requires only one file change.</li>
+  <li><strong>Orchestration:</strong> New <code>BulletinService</code> layer that checks idempotency, normalises data, calls the unchanged <code>StoryGenerator</code>, and persists results. Both the scheduler and any future API endpoint call this single service.</li>
+  <li><strong>Manual trigger:</strong> <code>DailyBulletinScheduler.trigger_now()</code> is available for testing without waiting for the next calendar day.</li>
+</ul>
+
+
+<h2>3. Files Created</h2>
+<table>
+  <tr><th>File</th><th>Purpose</th></tr>
+  <tr><td><code>backend/bulletin_store.py</code></td>
+      <td>JSON-file persistence layer. <code>BulletinStore</code> class with <code>save()</code>, <code>get_latest()</code>, <code>has_record_for()</code>. Backed by <code>BulletinRecord</code> dataclass.</td></tr>
+  <tr><td><code>backend/bulletin_service.py</code></td>
+      <td>Orchestration service. Idempotency check, data normalisation helpers (<code>_normalise_apod</code>, <code>_filter_donki_events</code>), pipeline call, failure recording.</td></tr>
+  <tr><td><code>backend/scheduler.py</code></td>
+      <td>APScheduler wrapper. <code>DailyBulletinScheduler</code> with <code>start()</code>, <code>shutdown()</code>, <code>trigger_now()</code>, <code>_run_job()</code>. <code>SchedulerStatus</code> for observability.</td></tr>
+  <tr><td><code>tests/test_bulletin_store.py</code></td><td>38 tests for the store layer.</td></tr>
+  <tr><td><code>tests/test_bulletin_service.py</code></td><td>20 tests for the service layer.</td></tr>
+  <tr><td><code>tests/test_scheduler.py</code></td><td>30 tests for scheduler, config, and new API endpoint.</td></tr>
+</table>
+
+
+<h2>4. Files Modified</h2>
+<table>
+  <tr><th>File</th><th>Why Changed</th></tr>
+  <tr><td><code>backend/config.py</code></td>
+      <td>Added <code>SchedulerConfig</code> dataclass with 5 env-driven fields (<code>DAILY_BULLETIN_ENABLED/HOUR/MINUTE/TIMEZONE/BULLETIN_STORE_PATH</code>). Extended <code>AppConfig</code> and <code>validate_config()</code> with range checks.</td></tr>
+  <tr><td><code>backend/main.py</code></td>
+      <td>Wired <code>BulletinStore</code>, <code>BulletinService</code>, and <code>DailyBulletinScheduler</code> into the <code>lifespan</code> context manager. Added <code>GET /api/daily-news/status</code> endpoint. Added scheduler shutdown to cleanup.</td></tr>
+  <tr><td><code>requirements.txt</code></td><td>Added <code>apscheduler&gt;=3.10.0</code>.</td></tr>
+  <tr><td><code>.env.example</code></td><td>Documented all 5 new scheduler env vars with comments.</td></tr>
+</table>
+
+
+<h2>5. Scheduler Mechanism</h2>
+<pre>DAILY_BULLETIN_ENABLED=true   # enables the job
+DAILY_BULLETIN_HOUR=7         # 24-hour time
+DAILY_BULLETIN_MINUTE=0
+DAILY_BULLETIN_TIMEZONE=UTC   # any IANA timezone (e.g. Asia/Riyadh)</pre>
+<ul>
+  <li>At startup, <code>main.py lifespan</code> instantiates <code>DailyBulletinScheduler</code> and calls <code>.start()</code>.</li>
+  <li>APScheduler adds a <code>CronTrigger(hour, minute, timezone)</code> job with 1-hour misfire tolerance.</li>
+  <li>Each triggered run calls <code>BulletinService.generate_daily_bulletin()</code>.</li>
+  <li>Any exception inside the job is caught — the scheduler stays alive and the next run is unaffected.</li>
+  <li>On shutdown, <code>_scheduler.shutdown(wait=False)</code> is called cleanly.</li>
+</ul>
+
+
+<h2>6. Persistence / Cache Mechanism</h2>
+<p>A single <code>bulletin_store.json</code> file in the working directory (configurable via <code>BULLETIN_STORE_PATH</code>) stores:</p>
+<pre>{
+  "latest": { "apod_date": "2024-06-15", "status": "success",
+              "generated_at": "2024-06-15T07:00:05Z", "story": {...} },
+  "records": {
+    "2024-06-15": { ... },
+    "2024-06-14": { ... }
+  }
+}</pre>
+<ul>
+  <li>The file is loaded once on <code>BulletinStore</code> construction and re-written on every <code>save()</code>.</li>
+  <li>Corrupt / missing files are silently ignored — the store starts empty.</li>
+  <li>Swapping to a database requires only reimplementing the 4 public methods of <code>BulletinStore</code>.</li>
+</ul>
+
+
+<h2>7. How Duplicate Daily Generation Is Prevented</h2>
+<ol>
+  <li>At each scheduled run, <code>BulletinService</code> fetches today's NASA APOD first.</li>
+  <li>The APOD's <code>date</code> field is used as the key — not the server's local date.</li>
+  <li><code>BulletinStore.has_record_for(apod_date)</code> returns <code>True</code> only if a <strong>successful</strong> bulletin already exists for that exact date.</li>
+  <li>If True, the pipeline is skipped and <code>None</code> is returned (logged as "skipped").</li>
+  <li>A <em>failed</em> record does NOT block a retry — only <code>status == "success"</code> skips.</li>
+  <li>The manual <code>force=True</code> flag bypasses the check entirely for admin/test use.</li>
+</ol>
+
+
+<h2>8. NASA Data Flow Into the AI Pipeline</h2>
+<pre>scheduler._run_job()
+  └── BulletinService.generate_daily_bulletin()
+        ├── NASAClient.get_apod(None)          ← NASA date is authoritative
+        ├── NASAClient.get_donki_cme()          ← non-fatal
+        ├── _normalise_apod(apod)               ← truncate, strip whitespace
+        ├── _filter_donki_events(events)         ← remove events without begin_time, cap at 5
+        └── StoryGenerator.generate_daily_story(apod_date)
+              ├── build_prompt_for_apod(apod, donki)
+              ├── AIProvider.generate_structured_response(...)
+              ├── _ensure_source_data(raw, apod) ← NASA provenance always wins
+              └── SpaceStory(**raw)              ← Pydantic validation</pre>
+<p>The existing <code>StoryGenerator</code> is called unchanged. <code>_ensure_source_data</code> always overwrites <code>source</code>, <code>date</code>, and <code>title</code> from the verified NASA object — no hallucination of provenance is possible.</p>
+
+
+<h2>9. New API Endpoints</h2>
+<table>
+  <tr><th>Endpoint</th><th>Status</th><th>Description</th></tr>
+  <tr><td><code>GET /api/daily-news</code></td><td><span class="badge green">Unchanged</span></td>
+      <td>Still calls <code>StoryGenerator.generate_daily_story()</code> directly. Fully backward compatible.</td></tr>
+  <tr><td><code>GET /api/daily-news/status</code></td><td><span class="badge blue">New</span></td>
+      <td>Returns scheduler metadata and latest bulletin summary. Never exposes API keys, prompts, or full model output.</td></tr>
+</table>
+<pre>GET /api/daily-news/status → 200
+{
+  "success": true,
+  "data": {
+    "scheduler": {
+      "enabled": true,
+      "last_run": "2024-06-15T07:00:00Z",
+      "last_success": "2024-06-15T07:00:05Z",
+      "apod_date": "2024-06-15",
+      "status": "success"
+    },
+    "latest_bulletin": {
+      "apod_date": "2024-06-15",
+      "status": "success",
+      "generated_at": "2024-06-15T07:00:05Z"
+    }
+  }
+}</pre>
+
+
+<h2>10. Test Results</h2>
+<div class="result-box">
+  <strong>Before TASK 2:</strong> 104 tests (from TASK 1 report)<br />
+  <strong>After TASK 2: 172 passed · 0 failed · 0 skipped</strong><br />
+  <strong>New tests added: 68</strong>
+</div>
+<table>
+  <tr><th>Test file</th><th>Tests</th><th>Description</th></tr>
+  <tr><td><code>test_bulletin_store.py</code></td><td>18</td><td>Store CRUD, persistence, corrupt file, latest pointer</td></tr>
+  <tr><td><code>test_bulletin_service.py</code></td><td>20</td><td>Normalisation, filtering, generation, idempotency, failure isolation</td></tr>
+  <tr><td><code>test_scheduler.py</code></td><td>30</td><td>Config, disabled/enabled scheduler, job execution, failure recovery, no-API-keys-in-logs, status endpoint</td></tr>
+  <tr><td><em>Existing (test_models, test_prompts)</em></td><td>104</td><td>All passing, unmodified</td></tr>
+</table>
+
+
+<h2>11. Runtime Commands Executed</h2>
+<pre>cd backend
+..\.venv\Scripts\python.exe -m pytest ../tests/ -v
+# Result: 172 passed, 0 failed, 0 skipped
+
+..\.venv\Scripts\python.exe -c "... endpoint smoke test ..."
+# GET /health              → 200 {"status":"ok"}
+# GET /api/daily-news      → 503 (no key configured, expected)
+# GET /api/daily-news/status → 200 {"success":true,"data":{...}}</pre>
+
+
+<h2>12. Observability &amp; Safety Rules</h2>
+<table>
+  <tr><th>What is logged</th><th>What is never logged</th></tr>
+  <tr><td>Scheduled job started / completed</td><td>API keys</td></tr>
+  <tr><td>APOD date and title</td><td>Authorization headers</td></tr>
+  <tr><td>DONKI event count</td><td>Full prompts</td></tr>
+  <tr><td>Generation success / failure / skipped</td><td>Full LLM responses</td></tr>
+  <tr><td>Exception class name on crash</td><td>Exception chain with config details</td></tr>
+  <tr><td>Elapsed time on success</td><td>Any secret values</td></tr>
+</table>
+
+
+<h2>13. Remaining Limitations</h2>
+<div class="warn-box">
+  <ul>
+    <li>The JSON store is a flat file — no concurrent write protection. For a multi-worker (Gunicorn) deployment a database would be required.</li>
+    <li>The scheduler runs inside the FastAPI process. If the process is restarted between the configured time and the check, the job may misfire (APScheduler's <code>misfire_grace_time=3600</code> mitigates this for up to 1 hour).</li>
+    <li><code>GET /api/daily-news</code> still re-generates on every call — it does not read from the store. This is intentional to preserve backward compatibility. A future optimisation could serve the stored bulletin for the current APOD date if present.</li>
+    <li>Timezone relies on the system having the <code>tzdata</code> package (installed automatically with <code>apscheduler</code>).</li>
+  </ul>
+</div>
+
+
+<footer>
+  Made with IBM Bob
+</footer>
+</body>
+</html>

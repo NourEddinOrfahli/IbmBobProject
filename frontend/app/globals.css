@@ -1,0 +1,386 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   PULSAR UI — Space Interpreter Design System
+   Core concept: Deep Space → Pulsar → Energy → Expanding Waves
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* ── Core Palette ─────────────────────────────────────────── */
+  --deep-space:     #050712;
+  --space-900:      #080c1a;
+  --space-800:      #0c1120;
+  --space-700:      #101828;
+  --space-600:      #1a2540;
+  --space-500:      #243050;
+
+  /* Pulsar Colors */
+  --pulsar-blue:    #00D9FF;
+  --plasma-violet:  #7A2CFF;
+  --pulsar-pink:    #FF2D9A;
+  --stellar-white:  #F7FBFF;
+
+  /* Gradient stops */
+  --grad-start:     #00D9FF;
+  --grad-mid:       #7A2CFF;
+  --grad-end:       #FF2D9A;
+
+  /* Text */
+  --text-primary:   #F7FBFF;
+  --text-muted:     #8BAAC8;
+  --text-faint:     #3d5a80;
+  --text-dim:       #1e3050;
+
+  /* Borders */
+  --border:         #1a2540;
+  --border-light:   #243050;
+  --border-glow:    rgba(0, 217, 255, 0.18);
+
+  /* Surfaces */
+  --bg-space:       #050712;
+  --bg-surface:     rgba(255,255,255,0.03);
+  --bg-elevated:    rgba(255,255,255,0.055);
+  --bg-card:        rgba(255,255,255,0.03);
+  --bg-card-hover:  rgba(255,255,255,0.06);
+
+  /* Legacy aliases (keep for existing components) */
+  --accent-blue:    #00D9FF;
+  --accent-gold:    #f5c842;
+  --accent-green:   #4ade80;
+  --accent-red:     #f87171;
+  --accent-orange:  #fb923c;
+  --accent-cyan:    #00D9FF;
+  --bg-elevated-solid: #101828;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Reset & Base
+   ───────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--deep-space);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,217,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(122,44,255,0.04) 0%, transparent 60%);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Sans Arabic', -apple-system, 'Segoe UI', system-ui, Tahoma, Arial, sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Arabic text — IBM Plex Sans Arabic */
+[lang="ar"],
+.arabic {
+  font-family: 'IBM Plex Sans Arabic', Tahoma, 'Segoe UI', Arial, sans-serif;
+  direction: rtl;
+  text-align: right;
+  line-height: 1.95;
+}
+
+/* Focus ring — accessible keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--pulsar-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0,217,255,0.2);
+  color: var(--stellar-white);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PULSAR ANIMATIONS
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadeIn {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulsarCore {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.12); }
+}
+
+@keyframes pulsarRing {
+  0%   { transform: scale(0.9); opacity: 0.6; }
+  50%  { transform: scale(1.1); opacity: 0.25; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+@keyframes pulsarScan {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  15%  { opacity: 0.4; }
+  85%  { opacity: 0.4; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes expandWave {
+  0%   { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes spinSlow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50%       { opacity: 1;    transform: scale(1); }
+}
+
+@keyframes navGlow {
+  0%, 100% { box-shadow: 0 0 6px rgba(0,217,255,0.3); }
+  50%       { box-shadow: 0 0 12px rgba(0,217,255,0.6); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Skeleton shimmer
+   ───────────────────────────────────────────────────────────── */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--space-700) 25%,
+    var(--space-600) 50%,
+    var(--space-700) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PULSAR CARD — glass scientific instrument
+   ───────────────────────────────────────────────────────────── */
+
+.space-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease;
+}
+
+.space-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 217, 255, 0.025) 0%,
+    transparent 50%,
+    rgba(122, 44, 255, 0.02) 100%
+  );
+  pointer-events: none;
+}
+
+.space-card:hover {
+  border-color: var(--border-glow);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Glow effects — PULSAR palette
+   ───────────────────────────────────────────────────────────── */
+
+.glow-blue {
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.06),
+              0 0 80px rgba(0, 217, 255, 0.03);
+}
+
+.glow-violet {
+  box-shadow: 0 0 30px rgba(122, 44, 255, 0.08),
+              0 0 60px rgba(122, 44, 255, 0.04);
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(245, 200, 66, 0.08),
+              0 0 40px rgba(245, 200, 66, 0.04);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Gradient text — pulsar spectrum
+   ───────────────────────────────────────────────────────────── */
+
+.pulsar-text {
+  background: linear-gradient(90deg, var(--pulsar-blue), var(--plasma-violet), var(--pulsar-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.pulsar-text-blue {
+  background: linear-gradient(90deg, var(--pulsar-blue), var(--plasma-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Hero gradient — cosmic command center
+   ───────────────────────────────────────────────────────────── */
+
+.hero-gradient {
+  background:
+    radial-gradient(ellipse 70% 80% at 20% 40%, rgba(0,217,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 20%, rgba(122,44,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 60% 80%, rgba(255,45,154,0.04) 0%, transparent 60%);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Pulsar drop zone
+   ───────────────────────────────────────────────────────────── */
+
+.pulsar-dropzone {
+  border: 2px dashed var(--border-light);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(0,217,255,0.03) 0%, transparent 70%);
+  transition: border-color 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+}
+
+.pulsar-dropzone:hover,
+.pulsar-dropzone:focus {
+  border-color: rgba(0,217,255,0.4);
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(0,217,255,0.06) 0%, transparent 70%);
+}
+
+.pulsar-dropzone.drag-over {
+  border-color: var(--pulsar-blue);
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 50%, rgba(0,217,255,0.10) 0%, transparent 70%);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Primary button — pulsar gradient
+   ───────────────────────────────────────────────────────────── */
+
+.btn-pulsar {
+  background: linear-gradient(135deg, var(--pulsar-blue), var(--plasma-violet));
+  color: var(--deep-space);
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-pulsar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+  pointer-events: none;
+}
+
+.btn-pulsar:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-pulsar:active:not(:disabled) {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.btn-pulsar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Secondary button */
+.btn-secondary {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--border-glow);
+  color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Section label chip
+   ───────────────────────────────────────────────────────────── */
+
+.section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(0, 217, 255, 0.07);
+  border: 1px solid rgba(0, 217, 255, 0.18);
+  color: var(--pulsar-blue);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Temperature gradient borders (cold → hot spectrum)
+   ───────────────────────────────────────────────────────────── */
+
+.temp-cold   { border-top: 2px solid rgba(0,217,255,0.4); }
+.temp-cosmic { border-top: 2px solid rgba(122,44,255,0.4); }
+.temp-hot    { border-top: 2px solid rgba(255,45,154,0.4); }
+
+/* ─────────────────────────────────────────────────────────────
+   Utility
+   ───────────────────────────────────────────────────────────── */
+
+.text-balance { text-wrap: balance; }
+.animate-fade-in { animation: fadeIn 0.4s ease-out both; }
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out both; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

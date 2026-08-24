@@ -1,0 +1,563 @@
+
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Task 2 — Architecture Gap Analysis</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.6;
+    background: #ffffff; color: #1f2328;
+    padding: 32px 16px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 21px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 15px; font-weight: 700; margin: 28px 0 10px;
+       border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; }
+  h3 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: #3b82d4; }
+  h4 { font-size: 12px; font-weight: 600; margin: 10px 0 4px; color: #57606a; text-transform: uppercase; letter-spacing: .04em; }
+  .subtitle { color: #57606a; font-size: 13px; margin-bottom: 24px; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; margin-right: 4px; vertical-align: middle;
+  }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #374151; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+  .callout {
+    background: #f7f8fa; border-left: 3px solid #3b82d4;
+    padding: 10px 14px; border-radius: 0 4px 4px 0; margin: 10px 0; font-size: 13px;
+  }
+  .callout.warn  { border-color: #f59e0b; background: #fffbeb; }
+  .callout.ok    { border-color: #22c55e; background: #f0fdf4; }
+  .callout.danger{ border-color: #ef4444; background: #fef2f2; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th { background: #f7f8fa; text-align: left; padding: 7px 10px; border: 1px solid #e5e7eb; font-weight: 600; }
+  td { padding: 6px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  code {
+    font-family: "Consolas","Fira Mono",monospace;
+    font-size: 12px; background: #f3f4f6; padding: 1px 5px;
+    border-radius: 3px; color: #d63384;
+  }
+  pre {
+    background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 4px;
+    padding: 12px 14px; font-size: 12px;
+    font-family: "Consolas","Fira Mono",monospace;
+    overflow-x: auto; margin: 8px 0; line-height: 1.55; color: #1f2328;
+  }
+  pre .add    { color: #166534; background: #dcfce7; display: block; }
+  pre .keep   { color: #57606a; display: block; }
+  pre .remove { color: #991b1b; background: #fee2e2; display: block; text-decoration: line-through; }
+  ul, ol { padding-left: 20px; margin: 6px 0; }
+  li { margin: 3px 0; }
+  .step {
+    display: flex; align-items: flex-start; gap: 12px; margin: 10px 0;
+    padding: 10px 14px; background: #f7f8fa; border-radius: 6px;
+    border: 1px solid #e5e7eb;
+  }
+  .step-num {
+    background: #1f2328; color: #fff; border-radius: 50%;
+    width: 24px; height: 24px; min-width: 24px;
+    text-align: center; line-height: 24px; font-size: 12px; font-weight: 700;
+  }
+  .step-body { flex: 1; font-size: 13px; }
+  .step-body strong { display: block; margin-bottom: 3px; }
+  .confirm-box {
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-radius: 6px; padding: 12px 16px; margin: 16px 0; font-size: 13px;
+  }
+  .section-tag {
+    display: inline-block; background: #0d1525; color: #4a9eff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 3px; margin-bottom: 6px; letter-spacing: .05em;
+  }
+  .gap-box {
+    border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin: 12px 0;
+  }
+  .gap-box .gap-title {
+    font-weight: 700; font-size: 14px; margin-bottom: 8px; display: flex;
+    align-items: center; gap: 8px;
+  }
+  .flow {
+    background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 4px;
+    padding: 10px 14px; font-size: 12px;
+    font-family: "Consolas","Fira Mono",monospace; line-height: 1.8;
+  }
+  footer {
+    margin-top: 40px; padding-top: 14px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center; font-size: 12px; color: #57606a;
+  }
+  @media(max-width:600px){ }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Task 2 — Architecture Gap Analysis</h1>
+  <div class="subtitle">READ-ONLY Investigation · APOD Image Passthrough · Space Weather Data · Implementation Order</div>
+
+  <div class="confirm-box">
+    ✅ <strong>Read-only confirmation:</strong> This analysis was produced by reading existing source files only. Zero files were modified, created, or deleted. Zero packages were installed.
+  </div>
+
+  
+  <h2>GAP A — APOD Image URL</h2>
+  
+
+  <div class="section-tag">FINDING</div>
+
+  <h3>A1 — Does NASAClient already fetch image_url / hd_image_url / media_type?</h3>
+
+  <p><strong>Yes — completely.</strong> The image fields are fetched, normalised, and stored in the Pydantic model at every request. Proof from <code>nasa_client.py</code> line 199–201 and line 208–216:</p>
+
+  <pre><span class="keep">url = raw.get("url")              # → image_url</span>
+<span class="keep">hdurl = raw.get("hdurl")          # → hd_image_url</span>
+<span class="keep">copyright_ = raw.get("copyright") # → copyright</span>
+<span class="keep">media_type = raw.get("media_type", "image")  # already captured line 190</span>
+<span class="keep">
+return NASAAPODData(
+    title=title,
+    explanation=explanation,
+    date=date_str,
+    media_type=media_type,          # ✅ present in model
+    image_url=url,                  # ✅ present in model
+    hd_image_url=hdurl,             # ✅ present in model
+    copyright=copyright_,           # ✅ present in model
+    additional_data=additional,
+)</span></pre>
+
+  <p>The <code>NASAAPODData</code> model in <code>models.py</code> has four fully typed optional fields:</p>
+  <pre><span class="keep">media_type: str                    # always present (defaults to "image")
+image_url: Optional[str] = None   # NASA APOD "url" field
+hd_image_url: Optional[str] = None# NASA APOD "hdurl" field
+copyright: Optional[str] = None   # NASA APOD "copyright" field</span></pre>
+
+  <h3>A2 — Where is this data currently lost?</h3>
+
+  <p>The data is fetched, validated, and held in memory perfectly. It is then deliberately <strong>discarded</strong> at exactly one point — the static method <code>StoryGenerator._ensure_source_data()</code> in <code>story_generator.py</code> lines 181–198. This method only writes three fields into <code>source_data</code>:</p>
+
+  <pre><span class="keep">existing.update({
+    "source": apod.source,   # ✅ written
+    "date": apod.date,       # ✅ written
+    "title": apod.title,     # ✅ written
+                             # ❌ image_url     NOT written
+                             # ❌ hd_image_url  NOT written
+                             # ❌ media_type    NOT written
+                             # ❌ copyright     NOT written
+})</span></pre>
+
+  <p>Because <code>source_data</code> is typed as <code>dict[str, Any]</code> in <code>SpaceStory</code>, extra keys are accepted without any schema change. The data loss is purely in this one method.</p>
+
+  <div class="callout">
+    <strong>Exact data flow showing where fields are dropped:</strong><br />
+    <code>NASA raw JSON</code> → <code>NASAAPODData</code> (all 4 fields present) → <code>_ensure_source_data()</code> <strong>← DATA LOST HERE</strong> → <code>SpaceStory.source_data</code> (only 3 fields)
+  </div>
+
+  <h3>A3 — What is the smallest backend change required?</h3>
+
+  <p>A <strong>4-line addition</strong> to <code>_ensure_source_data()</code> in <code>story_generator.py</code>. No new models, no new endpoints, no new routes, no schema changes. The existing <code>source_data: dict[str, Any]</code> field on <code>SpaceStory</code> already accepts arbitrary keys:</p>
+
+  <pre><span class="keep">existing.update({
+    "source": apod.source,
+    "date": apod.date,
+    "title": apod.title,</span>
+<span class="add">    "media_type": apod.media_type,</span>
+<span class="add">    "image_url": apod.image_url,       # None when not present — safe to omit in UI</span>
+<span class="add">    "hd_image_url": apod.hd_image_url, # None when not present</span>
+<span class="add">    "copyright": apod.copyright,       # None when not present</span>
+<span class="keep">})</span></pre>
+
+  <h4>Safety properties of this change</h4>
+  <ul>
+    <li><code>image_url</code> and <code>hd_image_url</code> are already <code>Optional[str]</code> — they can be <code>null</code> in the JSON (e.g., when <code>media_type == "video"</code>). The frontend must always null-check before rendering an <code>&lt;img&gt;</code> tag.</li>
+    <li><code>media_type</code> is always a string — it will be <code>"image"</code> or <code>"video"</code>. The frontend uses this to decide whether to render an image or a video notice.</li>
+    <li><code>copyright</code> is <code>Optional[str]</code> — used for proper attribution text. Not a secret. The NASA APOD page itself displays it publicly.</li>
+    <li>No API keys, no prompt content, no model names are exposed.</li>
+    <li>The existing <code>_ensure_source_data</code> unit tests in <code>tests/test_models.py</code> (lines 236–294) will still pass — they verify the three authoritative fields, and test case 5 explicitly confirms extra keys are preserved, not clobbered.</li>
+    <li>This change only affects the <code>generate_daily_story()</code> and <code>generate_apod_story_with_context()</code> pipelines. The <code>generate_from_context()</code> path has no APOD object, so it correctly won't call <code>_ensure_source_data</code> with image fields — that path remains unchanged.</li>
+  </ul>
+
+  <div class="callout ok">
+    <strong>Verdict — Gap A:</strong> One method, four new lines. No model changes, no new endpoints, no schema migrations, no test breakage. This is a <span class="badge badge-green">MINIMAL surgical change</span>.
+  </div>
+
+  
+  <h2>GAP B — Space Weather / Solar Storm Information</h2>
+  
+
+  <div class="section-tag">FINDING</div>
+
+  <h3>B1 — What DONKI data is currently fetched?</h3>
+
+  <p>The backend already fetches <strong>DONKI CME (Coronal Mass Ejection)</strong> events every time <code>/api/daily-news</code> is called. This is done in <code>StoryGenerator._fetch_donki_optional()</code> → <code>NASAClient.get_donki_cme()</code>.</p>
+
+  <h4>What is normalised into NASADONKIEvent</h4>
+  <table>
+    <tr><th>Field in NASADONKIEvent</th><th>Maps from NASA DONKI</th><th>Status</th></tr>
+    <tr><td><code>event_type</code></td><td>Hardcoded <code>"CME"</code></td><td><span class="badge badge-green">Present</span></td></tr>
+    <tr><td><code>begin_time</code></td><td><code>raw.get("startTime")</code></td><td><span class="badge badge-green">Present</span></td></tr>
+    <tr><td><code>peak_time</code></td><td><em>Not extracted</em></td><td><span class="badge badge-yellow">Skipped (field exists in raw)</span></td></tr>
+    <tr><td><code>end_time</code></td><td>Hardcoded <code>None</code></td><td><span class="badge badge-yellow">Skipped</span></td></tr>
+    <tr><td><code>linked_events</code></td><td><code>raw["linkedEvents"][*]["activityID"]</code></td><td><span class="badge badge-green">Present</span></td></tr>
+    <tr><td><code>source</code></td><td>Hardcoded <code>"NASA DONKI"</code></td><td><span class="badge badge-green">Present</span></td></tr>
+    <tr><td><code>raw</code></td><td>The full original CME dict</td><td><span class="badge badge-green">Present — full data preserved</span></td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>Key insight:</strong> The full raw DONKI CME payload is stored in <code>NASADONKIEvent.raw: dict[str, Any]</code>. This means all NASA DONKI CME fields are technically available in memory — they are just not normalised into named fields on the Pydantic model.
+  </div>
+
+  <h3>B2 — What does a real NASA DONKI CME response contain?</h3>
+
+  <p>Based on the official NASA DONKI API (publicly documented at <code>https://api.nasa.gov/DONKI/CME</code>), each CME event item contains:</p>
+
+  <pre>{
+  "activityID": "2024-06-14T10:00:00-CME-001",
+  "catalog": "M2M_CATALOG",
+  "startTime": "2024-06-14T10:00Z",         // → begin_time (already extracted)
+  "sourceLocation": "S15E25",               // sunspot location — useful
+  "activeRegionNum": 13699,                 // active region number — useful
+  "link": "https://kauai.ccmc.gsfc.nasa.gov/...",
+  "note": "CME with Type II radio burst",   // narrative context — useful
+  "instruments": [{"displayName": "LASCO C2"}, ...],
+  "cmeAnalyses": [
+    {
+      "time21_5": "2024-06-14T18:00Z",
+      "latitude": -15,
+      "longitude": 20,
+      "halfAngle": 30,
+      "speed": 850,                         // km/s — highly useful for display
+      "type": "S",                          // speed type (S/C/O)
+      "isMostAccurate": true,
+      "enlilList": [
+        {
+          "estimatedShockArrivalTime": "2024-06-17T03:00Z",  // Earth arrival — key info
+          "estimatedDuration": "18",
+          "rmin_re": null,
+          "kp_18": null,
+          "kp_90": 5,                       // estimated Kp index — geomagnetic impact
+          "kp_135": null,
+          "kp_180": null,
+          "isEarthGB": true,                // Earth-directed flag
+          "link": "...",
+          "impactList": [...]
+        }
+      ]
+    }
+  ],
+  "linkedEvents": [
+    {"activityID": "2024-06-14T10:30:00-FLR-001"}  // linked flare — already extracted
+  ]
+}</pre>
+
+  <h3>B3 — Is DONKI data currently exposed through any API endpoint?</h3>
+
+  <p><strong>No. This is the core gap.</strong> The DONKI events are fetched, normalised, passed into the AI prompt as context, and then <strong>completely discarded</strong>. They never appear in the final JSON response. The AI uses them when generating the story text, but the raw structured CME data is not returned to the frontend.</p>
+
+  <div class="flow">
+NASA DONKI CME API
+  → NASAClient.get_donki_cme() [fetched]
+  → _filter_donki_events() [filtered]
+  → build_apod_with_donki_prompt() [injected into AI prompt text only]
+  → AI generates story text                 ← CME data used here (as prompt context)
+  → SpaceStory returned                     ← NO CME fields in response
+  → /api/daily-news JSON                    ← DONKI data ABSENT from response
+  </div>
+
+  <h3>B4 — Is existing DONKI data sufficient for a useful solar-storm section?</h3>
+
+  <p><strong>Yes — with minimal normalisation of already-fetched data.</strong> The <code>NASADONKIEvent.raw</code> field stores the complete CME payload. The fields most relevant to a space-weather dashboard section are already present in the raw data and can be surfaced without any new NASA API calls:</p>
+
+  <table>
+    <tr><th>Dashboard need</th><th>Field in raw CME payload</th><th>Available?</th></tr>
+    <tr><td>Event timestamp</td><td><code>startTime</code></td><td><span class="badge badge-green">Yes (already in begin_time)</span></td></tr>
+    <tr><td>CME speed (km/s)</td><td><code>cmeAnalyses[0].speed</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+    <tr><td>Earth-directed flag</td><td><code>cmeAnalyses[0].enlilList[0].isEarthGB</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+    <tr><td>Estimated Earth arrival</td><td><code>cmeAnalyses[0].enlilList[0].estimatedShockArrivalTime</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+    <tr><td>Geomagnetic impact (Kp index)</td><td><code>cmeAnalyses[0].enlilList[0].kp_90</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+    <tr><td>Source region location</td><td><code>sourceLocation</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+    <tr><td>CME type</td><td><code>cmeAnalyses[0].type</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+    <tr><td>Narrative note</td><td><code>note</code></td><td><span class="badge badge-green">Yes (in raw)</span></td></tr>
+  </table>
+
+  <div class="callout warn">
+    <strong>Caution:</strong> The fields inside <code>cmeAnalyses</code> and <code>enlilList</code> are deeply nested and optional. Real NASA DONKI responses frequently have <code>null</code> or missing analyses (especially for slower CMEs). The backend must handle graceful nulls — and the frontend must never display a speed or arrival time it did not receive.
+  </div>
+
+  <h3>B5 — What additional NASA endpoint, if any, is needed?</h3>
+
+  <p><strong>No additional NASA API endpoint is needed for an MVP space-weather section.</strong> Everything described above comes from the <code>/DONKI/CME</code> endpoint already called by <code>NASAClient.get_donki_cme()</code>.</p>
+
+  <p>However, three additional DONKI event types are available on the same base URL (<code>https://api.nasa.gov/DONKI/</code>) that could enrich the dashboard in a future iteration — but are <strong>not required now</strong>:</p>
+
+  <table>
+    <tr><th>Endpoint</th><th>Data</th><th>Relevance</th><th>Required for MVP?</th></tr>
+    <tr><td><code>/DONKI/FLR</code></td><td>Solar Flares (class X, M, C)</td><td>High — dramatic, well-understood</td><td><span class="badge badge-yellow">Optional enhancement</span></td></tr>
+    <tr><td><code>/DONKI/GST</code></td><td>Geomagnetic Storm watches</td><td>Very high — directly communicates Earth impact</td><td><span class="badge badge-yellow">Optional enhancement</span></td></tr>
+    <tr><td><code>/DONKI/SEP</code></td><td>Solar Energetic Particles</td><td>Medium — technical, less accessible</td><td><span class="badge badge-red">Not for MVP</span></td></tr>
+  </table>
+
+  <h3>B6 — Proposed API response shape for space-weather data</h3>
+
+  <p>The backend should add a new field <code>space_weather</code> to the existing <code>/api/daily-news</code> response. This field is populated from the DONKI CME events already fetched in the same pipeline call. <strong>No new endpoint needed.</strong></p>
+
+  <pre>{
+  "success": true,
+  "data": {
+    // ... existing SpaceStory fields unchanged ...
+    "title": "...",
+    "summary": "...",
+    "source_data": { ... },
+
+    "space_weather": {                         // NEW FIELD — added by backend
+      "available": true,                       // false when DONKI returned 0 events
+      "event_count": 2,                        // number of CME events in response
+      "events": [
+        {
+          "event_type": "CME",
+          "begin_time": "2024-06-14T10:00Z",   // from NASADONKIEvent.begin_time
+          "speed_kmps": 850,                   // from raw.cmeAnalyses[0].speed (null if absent)
+          "is_earth_directed": true,           // from raw...enlilList[0].isEarthGB (null if absent)
+          "estimated_arrival": "2024-06-17T03:00Z", // from enlilList[0].estimatedShockArrivalTime
+          "kp_index": 5,                       // from enlilList[0].kp_90 (null if absent)
+          "source_location": "S15E25",         // from raw.sourceLocation (null if absent)
+          "note": "CME with Type II radio burst" // from raw.note (null if absent)
+        }
+      ]
+    }
+  }
+}</pre>
+
+  <div class="callout">
+    <strong>Design rule:</strong> Every field inside each event object must be <strong>explicitly nullable</strong>. The frontend renders a field only when its value is a non-null, non-empty string or number. If <code>space_weather.available == false</code> or <code>events == []</code>, the space-weather section shows a deliberate "no active events" state — never fabricated data.
+  </div>
+
+  <h3>B7 — Required backend changes for space-weather</h3>
+
+  <p>This requires <strong>a small but slightly larger backend change</strong> than Gap A:</p>
+
+  <table>
+    <tr><th>File</th><th>Change</th><th>Scope</th></tr>
+    <tr>
+      <td><code>backend/models.py</code></td>
+      <td>Add two new Pydantic models: <code>CMEEventSummary</code> and <code>SpaceWeatherSummary</code>. Add <code>space_weather: Optional[SpaceWeatherSummary]</code> to <code>SpaceStory</code>.</td>
+      <td><span class="badge badge-yellow">~20 lines</span></td>
+    </tr>
+    <tr>
+      <td><code>backend/story_generator.py</code></td>
+      <td>In <code>_ensure_source_data()</code> or a new <code>_attach_space_weather()</code> helper: extract CME fields from the already-fetched DONKI events list and attach to the story dict before Pydantic validation. Thread <code>donki_events</code> through to <code>_ensure_source_data</code> or call a new helper after step 5.</td>
+      <td><span class="badge badge-yellow">~25 lines</span></td>
+    </tr>
+    <tr>
+      <td><code>backend/models.py</code></td>
+      <td>The field <code>space_weather</code> on <code>SpaceStory</code> must be <code>Optional</code> with a <code>None</code> default — so existing tests and the <code>generate_from_context</code> path (which has no DONKI data) continue to work without modification.</td>
+      <td><span class="badge badge-green">Safe default</span></td>
+    </tr>
+  </table>
+
+  <div class="callout ok">
+    <strong>Verdict — Gap B:</strong> No new NASA API calls needed. All required data is already fetched. The gap is purely in data <em>passthrough</em> — the CME event fields are discarded after being used in the prompt text. A small backend extension (~45 lines across 2 files) surfaces this data in the response. <span class="badge badge-blue">Small backend API extension</span>.
+  </div>
+
+  
+  <h2>GAP C — Task Scope Classification</h2>
+  
+
+  <table>
+    <tr><th>Option</th><th>Description</th><th>Verdict</th></tr>
+    <tr>
+      <td>1. Frontend-only changes</td>
+      <td>No backend changes at all. Dashboard shows only existing API fields.</td>
+      <td><span class="badge badge-red">INSUFFICIENT</span> — Hero has no image. Space-weather section has no structured data. The dashboard would be a text-only reading interface without the cinematic visual element the spec requires.</td>
+    </tr>
+    <tr>
+      <td>2. Frontend + one tiny backend change</td>
+      <td>Only Gap A fix: 4 lines in <code>_ensure_source_data()</code> to pass image URL through.</td>
+      <td><span class="badge badge-yellow">PARTIAL</span> — Gets the image. No structured space-weather section possible (would need fabricated data or omit section). Acceptable for a Phase 1 MVP if space-weather section is deferred.</td>
+    </tr>
+    <tr>
+      <td>3. Frontend + small backend API extension</td>
+      <td>Gap A (4-line fix) + Gap B (~45-line extension): image URL + space_weather field added to response.</td>
+      <td><span class="badge badge-green">COMPLETE</span> — Full dashboard as specified. All data is sourced from NASA. No fabrication. No new external APIs. No new endpoints.</td>
+    </tr>
+  </table>
+
+  <div class="callout ok">
+    <strong>Recommended scope: Option 3.</strong><br />
+    Both changes are surgical, confined to two backend files, do not modify prompts/scheduler/NASA client/config/bulletin service, and are fully backward compatible. The total backend delta is ~49 lines across 2 files. This is the minimum viable change to deliver the complete specified dashboard.
+  </div>
+
+  
+  <h2>GAP D — Exact Implementation Order</h2>
+  
+
+  <div class="callout">
+    This order minimizes changes, eliminates risk, avoids duplicating backend logic, and keeps each step independently testable.
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <strong>Backend: models.py — Add CMEEventSummary + SpaceWeatherSummary models</strong>
+      Add two new lightweight Pydantic models. Add <code>space_weather: Optional[SpaceWeatherSummary] = None</code> to <code>SpaceStory</code>.
+      This is pure model addition — no logic change. All existing code and tests still pass because the new field is Optional with a None default.
+      <br /><span class="badge badge-blue">~20 lines added to models.py only</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <strong>Backend: story_generator.py — Image passthrough (Gap A) + Space weather attachment (Gap B)</strong>
+      Extend <code>_ensure_source_data()</code> with the 4 image lines (Gap A).<br />
+      Add a new private static method <code>_build_space_weather(donki_events)</code> that extracts CME summary fields from already-fetched events.<br />
+      Call it from <code>generate_daily_story()</code> and <code>generate_apod_story_with_context()</code> after Step 5 (<code>_ensure_source_data</code>), threading the <code>donki_events</code> list through.<br />
+      The <code>generate_from_context()</code> path (no APOD, no DONKI) is untouched — <code>space_weather</code> remains None for that path.
+      <br /><span class="badge badge-blue">~29 lines modified/added in story_generator.py only</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <strong>Backend: Run existing tests</strong>
+      Execute <code>pytest tests/ -v</code> from the project root. All existing tests must pass without modification, because:
+      (a) the new SpaceStory fields are Optional with None defaults,
+      (b) test fixtures don't set space_weather, so Pydantic fills in None,
+      (c) _ensure_source_data tests explicitly verify extra keys are preserved (not clobbered).
+      <br /><span class="badge badge-green">No test changes required for existing suite</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <strong>Backend: Add new backend tests for the two new features</strong>
+      Add test cases to <code>tests/test_models.py</code>: verify <code>CMEEventSummary</code> and <code>SpaceWeatherSummary</code> construction.<br />
+      Add test cases to <code>tests/test_bulletin_service.py</code> (or a new <code>test_story_generator.py</code>): verify that image fields appear in <code>source_data</code> and that <code>space_weather</code> is populated when DONKI events are present, and None when events list is empty.
+      <br /><span class="badge badge-blue">New test file or new test class, ~40 lines</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <strong>Frontend: Scaffold Next.js 14 + Tailwind CSS project in frontend/</strong>
+      Create the project skeleton: <code>next.config.js</code>, <code>tailwind.config.js</code>, <code>app/layout.tsx</code>, <code>globals.css</code>, <code>lib/types.ts</code>, <code>lib/api.ts</code>, <code>hooks/useDailyNews.ts</code>, <code>hooks/useBulletinStatus.ts</code>.
+      The TypeScript types in <code>lib/types.ts</code> now include <code>space_weather</code> and <code>source_data.image_url</code> per the updated backend contract.
+      <br /><span class="badge badge-blue">Greenfield scaffold, no backend dependency</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <strong>Frontend: Build SpaceDashboard orchestrator + state components</strong>
+      Implement <code>SpaceDashboard.tsx</code> (fetches data, manages 5 UI states), <code>BulletinSkeleton.tsx</code>, <code>BulletinError.tsx</code>, <code>BulletinEmpty.tsx</code>.
+      Verify all states render correctly with mocked data before building content components.
+      <br /><span class="badge badge-blue">State machine first — de-risks rest of implementation</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <strong>Frontend: Build MorningBulletinHero (uses image_url when available)</strong>
+      Render <code>source_data.title</code>, <code>source_data.date</code>, the Arabic headline, summary, and confidence badge. Conditionally render the image only when <code>source_data.media_type === "image" &amp;&amp; source_data.image_url</code> is truthy. Dark space aesthetic, hero layout, RTL Arabic text.
+      <br /><span class="badge badge-blue">Null-safe image rendering</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <strong>Frontend: Build ScientificStory section</strong>
+      Render <code>scientific_explanation</code>, <code>key_facts[]</code>, <code>why_it_matters</code>, <code>story</code>. Clear visual hierarchy. All fields from existing API, no changes needed.
+      <br /><span class="badge badge-green">Uses existing response fields only</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">9</div>
+    <div class="step-body">
+      <strong>Frontend: Build SpaceWeatherSection (uses space_weather when available)</strong>
+      Render CME event cards using <code>space_weather.events[]</code>. Show event count, begin_time, speed, Earth-directed flag, estimated arrival, Kp index. Every field null-checked. Show "لا توجد أحداث فضائية نشطة" (No active space events) when <code>space_weather.available === false</code>.
+      <br /><span class="badge badge-blue">Requires Step 2 backend change to be useful</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">10</div>
+    <div class="step-body">
+      <strong>Frontend: Build LiveStatus section</strong>
+      Uses <code>/api/daily-news/status</code> data. Already available in current API — no backend change needed. Renders scheduler state, last run time, APOD date, bulletin generation status.
+      <br /><span class="badge badge-green">Uses existing API endpoint — no backend changes</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">11</div>
+    <div class="step-body">
+      <strong>Frontend: Write component tests + hook tests</strong>
+      Test all 5 UI states, all component null-safety (especially image and space_weather optional fields), retry button behavior, RTL rendering. Use fixed JSON fixtures — never real API calls in tests.
+      <br /><span class="badge badge-blue">~15 test files</span>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">12</div>
+    <div class="step-body">
+      <strong>Final: Integration smoke test against live backend</strong>
+      Start backend (<code>cd backend &amp;&amp; uvicorn main:app --reload</code>). Start frontend (<code>cd frontend &amp;&amp; npm run dev</code>). Verify all sections render from real data. Verify image renders when APOD is an image type. Verify space-weather section appears when DONKI returns CME events.
+      <br /><span class="badge badge-green">End-to-end verification</span>
+    </div>
+  </div>
+
+  
+  <h2>Summary Table</h2>
+  
+
+  <table>
+    <tr><th>Gap</th><th>Data already fetched?</th><th>Data already in API response?</th><th>Change type</th><th>Files changed</th><th>New lines</th></tr>
+    <tr>
+      <td>A — APOD image URL</td>
+      <td><span class="badge badge-green">✅ Yes</span></td>
+      <td><span class="badge badge-red">❌ No</span></td>
+      <td>Tiny passthrough</td>
+      <td><code>story_generator.py</code></td>
+      <td>~4</td>
+    </tr>
+    <tr>
+      <td>B — Space weather CME</td>
+      <td><span class="badge badge-green">✅ Yes</span></td>
+      <td><span class="badge badge-red">❌ No</span></td>
+      <td>Small API extension</td>
+      <td><code>models.py</code>, <code>story_generator.py</code></td>
+      <td>~45</td>
+    </tr>
+    <tr>
+      <td>Frontend scaffold</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Greenfield creation</td>
+      <td>~18 new files in <code>frontend/</code></td>
+      <td>New</td>
+    </tr>
+  </table>
+
+  <div class="confirm-box" style="margin-top:24px">
+    <strong>✅ Final Confirmation — NO FILES WERE MODIFIED</strong><br />
+    Files read during this investigation: <code>backend/nasa_client.py</code>, <code>backend/story_generator.py</code>, <code>backend/models.py</code>, <code>backend/bulletin_service.py</code>, <code>backend/prompts.py</code>, <code>backend/openrouter_provider.py</code>, <code>backend/main.py</code>, <code>tests/conftest.py</code>, <code>tests/test_bulletin_service.py</code>, <code>tests/test_models.py</code>, <code>backend/test_prompt.py</code>, <code>New folder/بومت يجب تنفيذه.txt</code>. Zero writes, zero deletes, zero installs.
+  </div>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+</body>
+</html>

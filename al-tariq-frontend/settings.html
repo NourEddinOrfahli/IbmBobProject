@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>System Settings — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Settings RTL overrides ── */
+    html[dir="rtl"] .weather-row span,
+    html[dir="rtl"] .weather-row b { text-align: right; }
+    html[dir="rtl"] .field label { text-align: right; }
+    html[dir="rtl"] .btn { justify-content: flex-end; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav"></nav>
+    <div class="side-footer">MISSION STATUS<br><b>SYSTEMS CONFIGURED</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">MISSION CONTROL / SETTINGS</span>
+      <span class="tag">FRONTEND CONFIG</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">SYSTEM PREFERENCES</div>
+        <h1 id="sett-headline">Shape your signal.</h1>
+        <p id="sett-subtitle">Configure the interface, data presentation, and future API connection points for the Al-Tariq experience.</p>
+      </div>
+    </section>
+
+    <section class="grid grid-2">
+
+      <!-- Display preferences -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="eyebrow">INTERFACE</span>
+            <h2 id="sett-display-title">Display preferences</h2>
+          </div>
+        </div>
+        <div class="weather-list">
+          <div class="weather-row"><span id="sett-theme-label">Theme</span><b id="sett-theme-val">Deep space / dark</b></div>
+          <div class="weather-row"><span id="sett-motion-label">Motion</span><b id="sett-motion-val" style="color:var(--green)">Enabled</b></div>
+          <div class="weather-row"><span id="sett-density-label">Data density</span><b id="sett-density-val">Balanced</b></div>
+          <div class="weather-row"><span id="sett-time-label">Time format</span><b id="sett-time-val">UTC · 24 hour</b></div>
+        </div>
+        <button class="btn btn-ghost" id="sett-edit-btn" style="margin-top:20px">Edit preferences <span>→</span></button>
+      </div>
+
+      <!-- API connection -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="eyebrow">API PROXY PLACEHOLDER</span>
+            <h2 id="sett-api-title">Connection points</h2>
+          </div>
+          <span class="tag gold">NOT CONNECTED</span>
+        </div>
+        <div class="field">
+          <label id="sett-url-label">Backend base URL</label>
+          <input id="sett-url-input" placeholder="https://your-backend.example.com">
+        </div>
+        <div class="field">
+          <label id="sett-nasa-label">NASA data status</label>
+          <input id="sett-nasa-input" placeholder="Configured via .env on server" readonly style="opacity:.6">
+        </div>
+        <button class="btn btn-primary" id="sett-save-btn" style="margin-top:20px">
+          <span id="sett-save-txt">Save &amp; reconnect</span> <span>↗</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Language section -->
+    <div class="section-title" style="margin-top:40px">
+      <div>
+        <h2 id="sett-lang-section-title">Language &amp; locale</h2>
+        <p id="sett-lang-section-sub">Interface language and text direction.</p>
+      </div>
+      <span class="tag">i18n</span>
+    </div>
+    <section class="grid grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="eyebrow">LANGUAGE</span>
+            <h2 id="sett-lang-title">Interface language</h2>
+          </div>
+          <span class="tag green" id="sett-lang-current">EN</span>
+        </div>
+        <p class="muted" id="sett-lang-body">Use the AR / EN button at the top-right of any page to switch. Your preference is saved in the browser.</p>
+        <div class="actions" style="margin-top:16px">
+          <button class="btn btn-ghost" id="sett-switch-en">English (EN)</button>
+          <button class="btn btn-ghost" id="sett-switch-ar">العربية (AR)</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="eyebrow">DATA &amp; CACHE</span>
+            <h2 id="sett-cache-title">Local storage</h2>
+          </div>
+        </div>
+        <div class="weather-list">
+          <div class="weather-row">
+            <span id="sett-favs-label">Saved favorites</span>
+            <b id="sett-favs-count">0 items</b>
+          </div>
+          <div class="weather-row">
+            <span id="sett-lang-store-label">Language preference</span>
+            <b id="sett-lang-stored">EN</b>
+          </div>
+        </div>
+        <button class="btn" id="sett-clear-storage" style="margin-top:20px;color:var(--danger);border-color:rgba(251,113,133,.3)">
+          <span id="sett-clear-txt">Clear local storage</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- About -->
+    <div class="section-title" style="margin-top:40px">
+      <div>
+        <h2 id="sett-about-title">About Al-Tariq</h2>
+        <p id="sett-about-sub">Version information and credits.</p>
+      </div>
+    </div>
+    <section class="card">
+      <div class="grid grid-2" style="gap:12px">
+        <div class="weather-list">
+          <div class="weather-row"><span id="sett-ver-label">Version</span><b class="mono">1.0.0</b></div>
+          <div class="weather-row"><span id="sett-backend-label">Backend</span><b id="sett-backend-val">FastAPI / Python</b></div>
+          <div class="weather-row"><span id="sett-ai-label">AI engine</span><b>OpenRouter / Gemini 2.0 Flash</b></div>
+        </div>
+        <div class="weather-list">
+          <div class="weather-row"><span id="sett-nasa-src-label">Data source</span><b>NASA APOD · DONKI</b></div>
+          <div class="weather-row"><span id="sett-license-label">License</span><b>MIT</b></div>
+          <div class="weather-row"><span id="sett-lang-label-2">Language</span><b id="sett-lang-val">English / العربية</b></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Settings page ─────────────────────────────────────────────────────────
+
+const SETT_STRINGS = {
+  en: {
+    headline:        'Shape your signal.',
+    subtitle:        'Configure the interface, data presentation, and future API connection points for the Al-Tariq experience.',
+    displayTitle:    'Display preferences',
+    themeLabel:      'Theme',         themeVal:    'Deep space / dark',
+    motionLabel:     'Motion',        motionVal:   'Enabled',
+    densityLabel:    'Data density',  densityVal:  'Balanced',
+    timeLabel:       'Time format',   timeVal:     'UTC · 24 hour',
+    editBtn:         'Edit preferences →',
+    apiTitle:        'Connection points',
+    urlLabel:        'Backend base URL',
+    urlPlaceholder:  'https://your-backend.example.com',
+    nasaLabel:       'NASA data status',
+    nasaPlaceholder: 'Configured via .env on server',
+    saveTxt:         'Save & reconnect',
+    langSectionTitle:'Language & locale',
+    langSectionSub:  'Interface language and text direction.',
+    langTitle:       'Interface language',
+    langBody:        'Use the AR / EN button at the top-right of any page to switch. Your preference is saved in the browser.',
+    cacheTitle:      'Local storage',
+    favsLabel:       'Saved favorites',
+    langStoreLabel:  'Language preference',
+    clearTxt:        'Clear local storage',
+    aboutTitle:      'About Al-Tariq',
+    aboutSub:        'Version information and credits.',
+    verLabel:        'Version',
+    backendLabel:    'Backend',
+    aiLabel:         'AI engine',
+    nasaSrcLabel:    'Data source',
+    licenseLabel:    'License',
+    langLabel2:      'Language',
+  },
+  ar: {
+    headline:        'اضبط إشارتك.',
+    subtitle:        'اضبط الواجهة وعرض البيانات ونقاط الاتصال المستقبلية لتجربة الطارق.',
+    displayTitle:    'تفضيلات العرض',
+    themeLabel:      'السمة',              themeVal:    'الفضاء العميق / داكن',
+    motionLabel:     'الحركة',             motionVal:   'مفعّل',
+    densityLabel:    'كثافة البيانات',     densityVal:  'متوازن',
+    timeLabel:       'تنسيق الوقت',        timeVal:     'UTC · 24 ساعة',
+    editBtn:         'تعديل التفضيلات →',
+    apiTitle:        'نقاط الاتصال',
+    urlLabel:        'عنوان الخادم الأساسي',
+    urlPlaceholder:  'https://your-backend.example.com',
+    nasaLabel:       'حالة بيانات ناسا',
+    nasaPlaceholder: 'مضبوط عبر .env على الخادم',
+    saveTxt:         'حفظ وإعادة الاتصال',
+    langSectionTitle:'اللغة والتوطين',
+    langSectionSub:  'لغة الواجهة واتجاه النص.',
+    langTitle:       'لغة الواجهة',
+    langBody:        'استخدم زر AR / EN في الزاوية العلوية من أي صفحة للتبديل. يتم حفظ تفضيلاتك في المتصفح.',
+    cacheTitle:      'التخزين المحلي',
+    favsLabel:       'المفضلة المحفوظة',
+    langStoreLabel:  'تفضيل اللغة',
+    clearTxt:        'مسح التخزين المحلي',
+    aboutTitle:      'حول الطارق',
+    aboutSub:        'معلومات الإصدار والاعتمادات.',
+    verLabel:        'الإصدار',
+    backendLabel:    'الخادم الخلفي',
+    aiLabel:         'محرك الذكاء الاصطناعي',
+    nasaSrcLabel:    'مصدر البيانات',
+    licenseLabel:    'الرخصة',
+    langLabel2:      'اللغة',
+  },
+};
+
+function applySettStrings() {
+  const lang = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar' : 'en';
+  const s = SETT_STRINGS[lang];
+
+  const set    = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  const setAtt = (id, attr, val) => { const el = document.getElementById(id); if (el) el.setAttribute(attr, val); };
+
+  set('sett-headline',       s.headline);
+  set('sett-subtitle',       s.subtitle);
+  set('sett-display-title',  s.displayTitle);
+  set('sett-theme-label',    s.themeLabel);
+  set('sett-theme-val',      s.themeVal);
+  set('sett-motion-label',   s.motionLabel);
+  set('sett-motion-val',     s.motionVal);
+  set('sett-density-label',  s.densityLabel);
+  set('sett-density-val',    s.densityVal);
+  set('sett-time-label',     s.timeLabel);
+  set('sett-time-val',       s.timeVal);
+  set('sett-edit-btn',       s.editBtn);
+  set('sett-api-title',      s.apiTitle);
+  set('sett-url-label',      s.urlLabel);
+  set('sett-nasa-label',     s.nasaLabel);
+  set('sett-save-txt',       s.saveTxt);
+  set('sett-lang-section-title', s.langSectionTitle);
+  set('sett-lang-section-sub',   s.langSectionSub);
+  set('sett-lang-title',     s.langTitle);
+  set('sett-lang-body',      s.langBody);
+  set('sett-cache-title',    s.cacheTitle);
+  set('sett-favs-label',     s.favsLabel);
+  set('sett-lang-store-label', s.langStoreLabel);
+  set('sett-clear-txt',      s.clearTxt);
+  set('sett-about-title',    s.aboutTitle);
+  set('sett-about-sub',      s.aboutSub);
+  set('sett-ver-label',      s.verLabel);
+  set('sett-backend-label',  s.backendLabel);
+  set('sett-ai-label',       s.aiLabel);
+  set('sett-nasa-src-label', s.nasaSrcLabel);
+  set('sett-license-label',  s.licenseLabel);
+  set('sett-lang-label-2',   s.langLabel2);
+
+  setAtt('sett-url-input',   'placeholder', s.urlPlaceholder);
+  setAtt('sett-nasa-input',  'placeholder', s.nasaPlaceholder);
+
+  // Stored values
+  const favsCount = (() => {
+    try { return JSON.parse(localStorage.getItem('al-tariq-favorites') || '[]').length; } catch { return 0; }
+  })();
+  const langStored = localStorage.getItem('al-tariq-lang') || 'en';
+  set('sett-favs-count',  lang === 'ar' ? `${favsCount} عناصر` : `${favsCount} items`);
+  set('sett-lang-stored', langStored.toUpperCase());
+  set('sett-lang-current', langStored.toUpperCase());
+}
+
+// Language switch buttons
+document.getElementById('sett-switch-en').onclick = () => {
+  if (typeof applyLanguage === 'function') applyLanguage('en');
+};
+document.getElementById('sett-switch-ar').onclick = () => {
+  if (typeof applyLanguage === 'function') applyLanguage('ar');
+};
+
+// Clear storage button
+document.getElementById('sett-clear-storage').onclick = () => {
+  const lang = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar' : 'en';
+  const msg = lang === 'ar'
+    ? 'هل تريد مسح جميع بيانات الطارق المحلية (المفضلة + تفضيل اللغة)؟'
+    : 'Clear all Al-Tariq local data (favorites + language preference)?';
+  if (confirm(msg)) {
+    localStorage.removeItem('al-tariq-favorites');
+    localStorage.removeItem('al-tariq-apod-favs');
+    localStorage.removeItem('al-tariq-lang');
+    location.reload();
+  }
+};
+
+// Save URL button (just stores in localStorage for now)
+document.getElementById('sett-save-btn').onclick = () => {
+  const url = document.getElementById('sett-url-input').value.trim();
+  if (url) {
+    localStorage.setItem('al-tariq-api-url', url);
+    alert(url);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', applySettStrings);
+if (document.readyState !== 'loading') applySettStrings();
+</script>
+</body>
+</html>

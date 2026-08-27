@@ -1,0 +1,9 @@
+{
+  "name": "al-tariq-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static frontend handoff for the Al-Tariq space interpreter",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

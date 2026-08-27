@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pulsar Lab — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Pulsar Lab RTL overrides ── */
+    html[dir="rtl"] .field label { text-align: right; }
+    html[dir="rtl"] .field label b { float: left !important; }
+    html[dir="rtl"] .result-block { text-align: right; direction: rtl; }
+    html[dir="rtl"] .grid-2 .card { direction: rtl; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav"></nav>
+    <div class="side-footer">MISSION STATUS<br><b>LAB SIMULATION READY</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">PHYSICS WORKBENCH / PULSAR LAB</span>
+      <span class="tag">SIMULATION MODE</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">AL-TARIQ / NEUTRON STAR STUDY</div>
+        <h1 id="lab-headline">Turn the star.</h1>
+        <p id="lab-subtitle">Adjust the model and watch how rotation, magnetic tilt, and beam energy shape the signal.</p>
+      </div>
+    </section>
+
+    <section class="grid grid-2">
+
+      <!-- Pulsar visual -->
+      <div class="card">
+        <div class="hero-visual" style="height:460px">
+          <div class="orbit"></div>
+          <div class="orbit two"></div>
+          <div class="jet"></div>
+          <div class="jet back"></div>
+          <div class="pulsar"></div>
+          <div class="visual-label">SIMULATION / LIVE</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="eyebrow">CONTROL SURFACE</span>
+            <h2 id="lab-controls-title">Physics parameters</h2>
+          </div>
+          <span class="tag green">RUNNING</span>
+        </div>
+
+        <div class="field">
+          <label id="lbl-freq">Rotation frequency <b id="val-freq" style="float:right;color:var(--cyan)">716 Hz</b></label>
+          <input type="range" min="0" max="100" value="72" id="ctrl-freq">
+        </div>
+        <div class="field">
+          <label id="lbl-tilt">Magnetic field tilt <b id="val-tilt" style="float:right;color:var(--cyan)">−25°</b></label>
+          <input type="range" min="0" max="100" value="22" id="ctrl-tilt">
+        </div>
+        <div class="field">
+          <label id="lbl-energy">Beam energy <b id="val-energy" style="float:right;color:var(--cyan)">84%</b></label>
+          <input type="range" min="0" max="100" value="84" id="ctrl-energy">
+        </div>
+
+        <!-- Readouts -->
+        <div class="grid grid-2" style="gap:12px;margin-top:22px">
+          <div class="result-block">
+            <h3 id="readout-period-label">Pulse period</h3>
+            <div class="metric" id="readout-period" style="font-size:28px">1.40 ms</div>
+          </div>
+          <div class="result-block">
+            <h3 id="readout-width-label">Beam width</h3>
+            <div class="metric" id="readout-width" style="font-size:28px">8°</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Science card -->
+    <div class="section-title" style="margin-top:40px">
+      <div>
+        <h2 id="lab-science-title">How pulsars work</h2>
+        <p id="lab-science-sub">The physics behind the signal.</p>
+      </div>
+      <span class="tag green">EXPLAINER</span>
+    </div>
+    <section class="grid grid-3">
+      <div class="card">
+        <span class="eyebrow">NEUTRON STAR</span>
+        <h2 id="sci-density-title">Ultra-dense core</h2>
+        <p class="muted" id="sci-density-body">A neutron star packs 1.4 solar masses into a sphere just 20 km across — a teaspoon weighs a billion tonnes.</p>
+      </div>
+      <div class="card weather">
+        <span class="eyebrow">MAGNETIC FIELD</span>
+        <h2 id="sci-field-title">10¹² Gauss</h2>
+        <p class="muted" id="sci-field-body">The strongest magnetic fields in the observable universe, channelling charged particles into focused beams.</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">TIMING</span>
+        <h2 id="sci-timing-title">Cosmic clocks</h2>
+        <p class="muted" id="sci-timing-body">Millisecond pulsars rival atomic clocks in precision, enabling tests of general relativity and gravitational wave detection.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Pulsar Lab page ───────────────────────────────────────────────────────
+
+const LAB_STRINGS = {
+  en: {
+    headline:       'Turn the star.',
+    subtitle:       'Adjust the model and watch how rotation, magnetic tilt, and beam energy shape the signal.',
+    controlsTitle:  'Physics parameters',
+    lblFreq:        'Rotation frequency',
+    lblTilt:        'Magnetic field tilt',
+    lblEnergy:      'Beam energy',
+    periodLabel:    'Pulse period',
+    widthLabel:     'Beam width',
+    scienceTitle:   'How pulsars work',
+    scienceSub:     'The physics behind the signal.',
+    densityTitle:   'Ultra-dense core',
+    densityBody:    'A neutron star packs 1.4 solar masses into a sphere just 20 km across — a teaspoon weighs a billion tonnes.',
+    fieldTitle:     '10¹² Gauss',
+    fieldBody:      'The strongest magnetic fields in the observable universe, channelling charged particles into focused beams.',
+    timingTitle:    'Cosmic clocks',
+    timingBody:     'Millisecond pulsars rival atomic clocks in precision, enabling tests of general relativity and gravitational wave detection.',
+  },
+  ar: {
+    headline:       'أدِر النجم.',
+    subtitle:       'اضبط النموذج وشاهد كيف يُشكّل الدوران والميلان المغناطيسي وطاقة الحزمة الإشارةَ.',
+    controlsTitle:  'معاملات الفيزياء',
+    lblFreq:        'تردد الدوران',
+    lblTilt:        'ميلان المجال المغناطيسي',
+    lblEnergy:      'طاقة الحزمة',
+    periodLabel:    'دورة النبضة',
+    widthLabel:     'عرض الحزمة',
+    scienceTitle:   'كيف تعمل البولسارات',
+    scienceSub:     'الفيزياء وراء الإشارة.',
+    densityTitle:   'نواة شديدة الكثافة',
+    densityBody:    'يضغط النجم النيوتروني 1.4 كتلة شمسية في كرة قطرها 20 كم فقط — ملعقة صغيرة منه تزن مليار طن.',
+    fieldTitle:     '10¹² غاوس',
+    fieldBody:      'أقوى مجالات مغناطيسية في الكون المرصود، تُوجّه الجسيمات المشحونة في حزم مركّزة.',
+    timingTitle:    'ساعات كونية',
+    timingBody:     'تضاهي بولسارات المللي ثانية الساعات الذرية دقةً، وتُتيح اختبار النسبية العامة والكشف عن الموجات الثقالية.',
+  },
+};
+
+function applyLabStrings() {
+  const lang = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar' : 'en';
+  const s = LAB_STRINGS[lang];
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('lab-headline',       s.headline);
+  set('lab-subtitle',       s.subtitle);
+  set('lab-controls-title', s.controlsTitle);
+  set('readout-period-label', s.periodLabel);
+  set('readout-width-label',  s.widthLabel);
+  set('lab-science-title',    s.scienceTitle);
+  set('lab-science-sub',      s.scienceSub);
+  set('sci-density-title',    s.densityTitle);
+  set('sci-density-body',     s.densityBody);
+  set('sci-field-title',      s.fieldTitle);
+  set('sci-field-body',       s.fieldBody);
+  set('sci-timing-title',     s.timingTitle);
+  set('sci-timing-body',      s.timingBody);
+
+  // Labels with live readout value on the right — rebuild carefully
+  const freqVal   = document.getElementById('val-freq').textContent;
+  const tiltVal   = document.getElementById('val-tilt').textContent;
+  const energyVal = document.getElementById('val-energy').textContent;
+  const lblFreq   = document.getElementById('lbl-freq');
+  const lblTilt   = document.getElementById('lbl-tilt');
+  const lblEnergy = document.getElementById('lbl-energy');
+  if (lblFreq)   lblFreq.innerHTML   = `${s.lblFreq}   <b id="val-freq"   style="float:${lang==='ar'?'left':'right'};color:var(--cyan)">${freqVal}</b>`;
+  if (lblTilt)   lblTilt.innerHTML   = `${s.lblTilt}   <b id="val-tilt"   style="float:${lang==='ar'?'left':'right'};color:var(--cyan)">${tiltVal}</b>`;
+  if (lblEnergy) lblEnergy.innerHTML = `${s.lblEnergy} <b id="val-energy" style="float:${lang==='ar'?'left':'right'};color:var(--cyan)">${energyVal}</b>`;
+}
+
+// ── Pulsar simulation controls ─────────────────────────────────────────────
+const visual   = document.querySelector('.hero-visual');
+const ctrlFreq   = document.getElementById('ctrl-freq');
+const ctrlTilt   = document.getElementById('ctrl-tilt');
+const ctrlEnergy = document.getElementById('ctrl-energy');
+
+function updatePulsar() {
+  const hz      = Math.round(120 + Number(ctrlFreq.value) * 8.28);
+  const tiltDeg = Math.round(-45 + Number(ctrlTilt.value) * 0.91);
+  const power   = Number(ctrlEnergy.value);
+  const period  = (1000 / hz).toFixed(2);
+  const width   = (3 + power * 0.06).toFixed(0);
+
+  visual.style.setProperty('--pulsar-speed', `${(4600 / hz).toFixed(2)}s`);
+  visual.style.setProperty('--tilt-deg',     `${tiltDeg}deg`);
+  visual.style.setProperty('--beam-power',   power / 100);
+  visual.querySelectorAll('.jet').forEach(j => { j.style.width = `${40 + power * 0.1}%`; });
+
+  const vFreq   = document.getElementById('val-freq');
+  const vTilt   = document.getElementById('val-tilt');
+  const vEnergy = document.getElementById('val-energy');
+  if (vFreq)   vFreq.textContent   = `${hz} Hz`;
+  if (vTilt)   vTilt.textContent   = `${tiltDeg < 0 ? '−' : '+'}${Math.abs(tiltDeg)}°`;
+  if (vEnergy) vEnergy.textContent = `${power}%`;
+
+  const pPeriod = document.getElementById('readout-period');
+  const pWidth  = document.getElementById('readout-width');
+  if (pPeriod) pPeriod.textContent = `${period} ms`;
+  if (pWidth)  pWidth.textContent  = `${width}°`;
+}
+
+[ctrlFreq, ctrlTilt, ctrlEnergy].forEach(c => c.addEventListener('input', updatePulsar));
+updatePulsar();
+
+// Apply language strings after boot (app.js DOMContentLoaded may already have fired)
+document.addEventListener('DOMContentLoaded', applyLabStrings);
+// Also apply immediately in case DOMContentLoaded already fired
+if (document.readyState !== 'loading') applyLabStrings();
+</script>
+</body>
+</html>

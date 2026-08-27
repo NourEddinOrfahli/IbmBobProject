@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Space Chat — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav">
+      <a href="index.html"><span>Home</span></a>
+      <a href="interpreter.html"><span>Image Interpreter</span></a>
+      <a href="chat.html" class="active"><span>AI Space Chat</span></a>
+      <a href="stories.html"><span>Cosmos Stories</span></a>
+      <a href="favorites.html"><span>Favorites</span></a>
+    </nav>
+    <div class="side-footer">MISSION STATUS<br><b>MISSION AI ONLINE</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">AI CORE / CONVERSATION</span>
+      <span id="chat-status-tag" class="tag green">READY</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">ORBITAL KNOWLEDGE INTERFACE</div>
+        <h1>Ask the universe.</h1>
+        <p>A focused conversation space for black holes, stellar birth, pulsars, and everything between.</p>
+      </div>
+    </section>
+
+    <!-- Image context banner (shown when arriving from interpreter) -->
+    <div id="image-context-banner" style="display:none;margin-bottom:16px">
+      <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(0,240,255,.05);border-color:rgba(0,240,255,.2)">
+        <div>
+          <span class="eyebrow" style="display:block;margin-bottom:4px">IMAGE CONTEXT ACTIVE</span>
+          <span id="image-context-title" class="muted" style="font-size:13px"></span>
+        </div>
+        <button id="clear-context" class="btn" style="font-size:12px;padding:7px 12px">Clear context ✕</button>
+      </div>
+    </div>
+
+    <section class="card chat-shell">
+      <!-- Prompt chips -->
+      <div class="chips" id="chat-chips">
+        <button class="chip" data-prompt="What is a black hole?">What is a black hole?</button>
+        <button class="chip" data-prompt="How are stars born?">How are stars born?</button>
+        <button class="chip" data-prompt="Explain neutron star spin">Explain neutron star spin</button>
+        <button class="chip" data-prompt="What is a pulsar?">What is a pulsar?</button>
+      </div>
+
+      <!-- Messages area -->
+      <div id="messages" class="messages" aria-live="polite" aria-label="Chat messages">
+        <div class="message ai" id="welcome-msg">
+          <small>AL-TARIQ AI · READY</small>
+          Welcome to the interpreter. Ask me anything about the cosmos and I will translate the science into a clear signal.
+        </div>
+      </div>
+
+      <!-- Error bar -->
+      <div id="chat-error" style="display:none;padding:10px 14px;background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.25);border-radius:10px;color:var(--danger);font-size:13px;margin-bottom:10px"></div>
+
+      <!-- Input form -->
+      <form id="chat-form" class="chat-form" autocomplete="off">
+        <input id="chat-input" type="text" placeholder="Ask about stars, black holes, pulsars…" maxlength="800" aria-label="Message">
+        <button class="btn btn-primary" type="submit" id="send-btn">Send</button>
+        <button class="btn" type="button" id="clear-chat-btn" title="Clear conversation">↺</button>
+      </form>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Enter to send · max 800 characters per message</div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Chat page ─────────────────────────────────────────────────────────────
+
+const form      = document.getElementById('chat-form');
+const inputEl   = document.getElementById('chat-input');
+const messages  = document.getElementById('messages');
+const sendBtn   = document.getElementById('send-btn');
+const errorBar  = document.getElementById('chat-error');
+const statusTag = document.getElementById('chat-status-tag');
+
+let conversationHistory = [];
+let imageContext = null;
+let sending = false;
+
+// ── Image context from interpreter page ──────────────────────────────────
+(function loadContext() {
+  const raw = sessionStorage.getItem('al-tariq-image-context');
+  if (!raw) return;
+  try {
+    const ctx = JSON.parse(raw);
+    imageContext = ctx;
+    document.getElementById('image-context-banner').style.display = '';
+    document.getElementById('image-context-title').textContent = ctx.title || 'Image context loaded';
+    // Replace generic chips with image-specific prompts
+    document.getElementById('chat-chips').innerHTML = `
+      <button class="chip" data-prompt="What is this object?">What is this object?</button>
+      <button class="chip" data-prompt="How was this formed?">How was this formed?</button>
+      <button class="chip" data-prompt="How far away is it?">How far away is it?</button>`;
+    rebindChips();
+  } catch {}
+})();
+
+document.getElementById('clear-context').onclick = () => {
+  sessionStorage.removeItem('al-tariq-image-context');
+  imageContext = null;
+  document.getElementById('image-context-banner').style.display = 'none';
+};
+
+// ── Prompt chips ──────────────────────────────────────────────────────────
+function rebindChips() {
+  document.querySelectorAll('[data-prompt]').forEach(b => {
+    b.onclick = () => { inputEl.value = b.dataset.prompt; inputEl.focus(); };
+  });
+}
+rebindChips();
+
+// ── Message rendering ─────────────────────────────────────────────────────
+function appendMessage(role, content) {
+  const div = document.createElement('div');
+  div.className = 'message ' + (role === 'user' ? 'user' : 'ai');
+  const label = role === 'user' ? t('YOU') : t('AL-TARIQ AI');
+  div.innerHTML = `<small>${label} · ${new Date().toUTCString().slice(17,22)} UTC</small>${escapeHtml(content)}`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  return div;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'message ai';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<small>${t('AL-TARIQ AI · PROCESSING')}</small><span class="loading"><i></i><i></i><i></i></span>`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+// ── Send message ──────────────────────────────────────────────────────────
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const text = inputEl.value.trim();
+  if (!text || sending) return;
+  if (text.length > 800) {
+    errorBar.style.display = '';
+    errorBar.textContent = t('Message too long (max 800 characters).');
+    return;
+  }
+
+  errorBar.style.display = 'none';
+  sending = true;
+  sendBtn.disabled = true;
+  statusTag.textContent = t('PROCESSING');
+  statusTag.className = 'tag';
+
+  // Remove welcome message on first real send
+  const welcome = document.getElementById('welcome-msg');
+  if (welcome) welcome.remove();
+
+  conversationHistory.push({ role: 'user', content: text });
+  appendMessage('user', text);
+  inputEl.value = '';
+  showTyping();
+
+  try {
+    const data = await AlTariqAPI.sendChatMessage(conversationHistory, imageContext);
+    removeTyping();
+    const reply = data.reply || '';
+    conversationHistory.push({ role: 'assistant', content: reply });
+    appendMessage('assistant', reply);
+    statusTag.textContent = t('READY');
+    statusTag.className = 'tag green';
+  } catch (err) {
+    removeTyping();
+    errorBar.style.display = '';
+    errorBar.textContent = err.message || t('Could not reach the AI. Check the backend is running.');
+    // Roll back the failed user message from history so the state is consistent
+    conversationHistory.pop();
+    statusTag.textContent = t('ERROR');
+    statusTag.className = 'tag';
+    statusTag.style.color = 'var(--danger)';
+  } finally {
+    sending = false;
+    sendBtn.disabled = false;
+  }
+};
+
+// ── Clear conversation ────────────────────────────────────────────────────
+document.getElementById('clear-chat-btn').onclick = () => {
+  conversationHistory = [];
+  messages.innerHTML = `
+    <div class="message ai" id="welcome-msg">
+      <small>${t('AL-TARIQ AI · READY')}</small>
+      ${t('Conversation cleared. What would you like to explore?')}
+    </div>`;
+  errorBar.style.display = 'none';
+  statusTag.textContent = t('READY');
+  statusTag.className = 'tag green';
+  statusTag.style.color = '';
+};
+</script>
+</body>
+</html>

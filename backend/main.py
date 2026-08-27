@@ -7,6 +7,8 @@ Endpoints:
   GET  /api/daily-news/status   — scheduler and latest bulletin status
   POST /api/analyze             — analyse a specific APOD date or free-text context
   POST /api/analyze-image       — analyse a user-uploaded space image with vision AI
+  GET  /api/space-weather       — real-time NASA DONKI CME data (no AI dependency)
+  GET  /api/stories             — fetch APOD stories for a date range
 """
 
 from __future__ import annotations
@@ -534,6 +536,56 @@ async def chat(body: ChatRequest) -> JSONResponse:
     chat_response = ChatResponse(reply=reply)
     return JSONResponse(
         content=SuccessResponse(data=chat_response.model_dump()).model_dump(),
+        status_code=status.HTTP_200_OK,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Space Weather endpoint — NASA DONKI only, no OpenRouter dependency
+# ---------------------------------------------------------------------------
+
+
+@app.get(
+    "/api/space-weather",
+    response_model=SuccessResponse,
+    summary="Real-time NASA DONKI CME space-weather data",
+    tags=["Space"],
+)
+async def space_weather() -> JSONResponse:
+    """
+    Returns parsed NASA DONKI Coronal Mass Ejection events as a
+    SpaceWeatherSummary — identical schema to the space_weather field
+    embedded in /api/daily-news responses.
+
+    This endpoint is completely independent of OpenRouter and AI story
+    generation.  It works even when all AI models are unavailable.
+
+    Never exposes the NASA API key.
+    Never calls OpenRouter, ChatService, or StoryGenerator.
+    """
+    if _nasa_client is None:
+        return _error_response(
+            "NASA_NOT_CONFIGURED",
+            "خدمة ناسا غير مهيأة.",
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    try:
+        donki_events = await _nasa_client.get_donki_cme()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Space-weather endpoint: DONKI fetch failed: %s", exc)
+        return _error_response(
+            "NASA_DONKI_ERROR",
+            "تعذّر جلب بيانات طقس الفضاء من ناسا. يرجى المحاولة مجدداً.",
+            status.HTTP_502_BAD_GATEWAY,
+        )
+
+    # Reuse the same space-weather builder already used by StoryGenerator
+    # so the response schema is identical.
+    sw = StoryGenerator._build_space_weather(donki_events)
+
+    return JSONResponse(
+        content=SuccessResponse(data=sw.model_dump()).model_dump(),
         status_code=status.HTTP_200_OK,
     )
 

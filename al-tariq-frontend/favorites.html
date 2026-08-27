@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Favorites — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav">
+      <a href="index.html"><span>Home</span></a>
+      <a href="interpreter.html"><span>Image Interpreter</span></a>
+      <a href="chat.html"><span>AI Space Chat</span></a>
+      <a href="stories.html"><span>Cosmos Stories</span></a>
+      <a href="favorites.html" class="active"><span>Favorites</span></a>
+    </nav>
+    <div class="side-footer">MISSION STATUS<br><b>LOCAL ARCHIVE READY</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">ARCHIVE / FAVORITES</span>
+      <span class="tag gold">LOCAL STORAGE</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">YOUR CAPTURED SIGNALS</div>
+        <h1>Keep what moves you.</h1>
+        <p>Your personal constellation of stories, saved locally in this browser.</p>
+      </div>
+      <div class="actions">
+        <a class="btn btn-ghost" href="stories.html">Explore archive →</a>
+        <button id="clear-all-btn" class="btn" style="display:none">Clear all</button>
+      </div>
+    </section>
+
+    <!-- Favorites count -->
+    <div id="fav-count" class="mono muted" style="margin-bottom:18px;font-size:12px"></div>
+
+    <section id="favorites-grid" class="story-grid"></section>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Favorites page — reads from localStorage ──────────────────────────────
+// Compatible with both:
+//   • stories.html — stores full StoryCard objects at key 'al-tariq-favorites'
+//   • index.html   — stores APOD date IDs at key 'al-tariq-apod-favs'
+
+function getFavs() {
+  // Full StoryCard objects (from stories.html)
+  try {
+    const raw = JSON.parse(localStorage.getItem('al-tariq-favorites') || '[]');
+    if (Array.isArray(raw) && raw.length) return raw;
+  } catch {}
+  return [];
+}
+
+function removeFav(id) {
+  let f = getFavs();
+  f = f.filter(x => x.id !== id);
+  localStorage.setItem('al-tariq-favorites', JSON.stringify(f));
+  renderFavorites();
+}
+
+function clearAll() {
+  if (!confirm('Remove all saved stories from this browser?')) return;
+  localStorage.removeItem('al-tariq-favorites');
+  renderFavorites();
+}
+
+function renderFavorites() {
+  const grid = document.getElementById('favorites-grid');
+  const countEl = document.getElementById('fav-count');
+  const clearBtn = document.getElementById('clear-all-btn');
+  const items = getFavs();
+
+  countEl.textContent = items.length
+    ? `${items.length} ${items.length === 1 ? t('saved signal') : t('saved signals')}`
+    : '';
+  clearBtn.style.display = items.length ? '' : 'none';
+
+  if (!items.length) {
+    grid.innerHTML = `
+      <div class="card empty" style="grid-column:1/-1;padding:60px 20px">
+        <div style="font-size:32px;margin-bottom:16px;opacity:.4">★</div>
+        <h2>${t('Your archive is quiet')}</h2>
+        <p class="muted">${t('Save a story from the')} <a href="stories.html" style="color:var(--cyan)">${t('Cosmos Stories')}</a> ${t('archive and it will appear here.')}</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(s => {
+    const hasImg = s.image_url && s.media_type !== 'video';
+    const imgStyle = hasImg
+      ? `background-image:url('${s.image_url}');background-size:cover;background-position:center`
+      : `background:linear-gradient(135deg,rgba(0,240,255,.06),rgba(123,0,255,.14));display:grid;place-items:center`;
+    const placeholder = !hasImg
+      ? `<span style="font-size:24px;opacity:.3">${s.media_type === 'video' ? '▶' : '✦'}</span>`
+      : '';
+    const nasaDate = s.date ? s.date.replace(/-/g, '').slice(2) : '';
+    return `
+      <article class="card story-tile">
+        <div class="tile-image" style="${imgStyle}">${placeholder}</div>
+        <div class="tile-content">
+          <div class="card-head">
+            <span class="tag gold">${t('SAVED SIGNAL')}</span>
+            <button class="favorite saved" data-remove="${s.id}" aria-label="Remove from favorites">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="17"><path d="m12 3 2.8 5.6 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.5l6.2-.9L12 3Z"/></svg>
+            </button>
+          </div>
+          <h3 style="min-height:auto">${s.title}</h3>
+          <p>${(s.summary || '').slice(0, 120)}${s.summary && s.summary.length > 120 ? '…' : ''}</p>
+          <div class="tile-foot">
+            <span>${s.date || ''}</span>
+            ${nasaDate ? `<a href="https://apod.nasa.gov/apod/ap${nasaDate}.html" target="_blank" rel="noopener" style="color:var(--cyan);font-size:10px">${t('NASA ↗')}</a>` : `<span>${t('LOCAL ARCHIVE')}</span>`}
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+
+  // Remove buttons
+  grid.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.onclick = () => removeFav(btn.dataset.remove);
+  });
+}
+
+document.getElementById('clear-all-btn').onclick = clearAll;
+renderFavorites();
+</script>
+</body>
+</html>

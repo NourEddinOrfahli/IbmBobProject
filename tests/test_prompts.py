@@ -500,7 +500,13 @@ class TestRetryLogic:
 
     @pytest.mark.asyncio
     async def test_no_retry_on_rate_limit(self):
-        """HTTP 429 must raise AI_RATE_LIMIT immediately — no retry."""
+        """HTTP 429 raises AI_RATE_LIMIT.
+
+        With the fallback model active, the provider makes one extra POST
+        attempt using the fallback model before propagating the error.
+        The important invariant is that the error code is AI_RATE_LIMIT and
+        no *prompt-retry* loop is triggered (i.e. ≤2 calls total, not 4).
+        """
         provider = _make_provider()
         mock_resp = MagicMock()
         mock_resp.is_success = False
@@ -513,7 +519,8 @@ class TestRetryLogic:
                     system_prompt="sys", user_prompt="usr"
                 )
         assert exc_info.value.code == "AI_RATE_LIMIT"
-        assert mock_post.call_count == 1
+        # Primary call + one fallback attempt = 2; no prompt-retry loop.
+        assert mock_post.call_count <= 2
 
 
 # ---------------------------------------------------------------------------

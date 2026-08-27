@@ -32,8 +32,12 @@ from prompts import build_retry_user_prompt, RETRY_SYSTEM_PROMPT
 
 # Vision-capable model to use for image analysis.
 # Uses a free, multimodal-capable model on OpenRouter.
-# Can be overridden via OPENROUTER_VISION_MODEL env var.
-_VISION_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free"
+# NOTE: this module-level constant is superseded by config.openrouter.vision_model
+# (loaded from OPENROUTER_VISION_MODEL env var).  Kept only for reference.
+# nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free is verified working for
+# structured JSON vision output.  minimax/minimax-m3:free only returns 13-char
+# stub JSON for complex prompts.
+_VISION_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
 
 logger = logging.getLogger(__name__)
 
@@ -105,21 +109,48 @@ class OpenRouterProvider(AIProvider):
         """
         Send a chat-completion request to OpenRouter and return parsed JSON.
 
+        - Tries the primary model (OPENROUTER_MODEL, default: meta-llama/llama-3.3-70b-instruct:free).
+        - On permanent primary failure (rate-limit / unavailable), automatically
+          retries with the fallback model (OPENROUTER_FALLBACK_MODEL, default: qwen/qwen-2.5-coder-32b-instruct:free).
         - Logs finish_reason for every response (helps diagnose truncation).
-        - If finish_reason == "length", raises AI_TRUNCATED immediately.
+        - If finish_reason == "length", retries with a shorter prompt.
         - On JSON parse failure, performs ONE retry with a shorter prompt.
-        - Never retries on permanent HTTP errors (auth, rate limit, etc.).
+        - Never retries on auth / API-key errors.
         """
-        # First attempt
+        # Determine which models to try
+        primary_model = self._config.model
+        fallback_model = getattr(self._config, "fallback_model", None)
+
+        # ── First attempt with primary model ──────────────────────────────
         try:
             raw_content, finish_reason = await self._call_completions(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
+                model=primary_model,
             )
-        except AIProviderError:
-            raise  # permanent errors propagate immediately
+        except AIProviderError as exc:
+            # On rate-limit, service-unavailable, or model-not-found, try the fallback once.
+            # AI_MODEL_NOT_FOUND means the primary model slug returned 404 from OpenRouter —
+            # switching to the fallback is the correct recovery action.
+            if exc.code in ("AI_RATE_LIMIT", "AI_SERVICE_UNAVAILABLE", "AI_MODEL_NOT_FOUND") and fallback_model:
+                logger.warning(
+                    "Primary model %s failed (%s) — retrying with fallback model %s",
+                    primary_model, exc.code, fallback_model,
+                )
+                try:
+                    raw_content, finish_reason = await self._call_completions(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        model=fallback_model,
+                    )
+                except AIProviderError:
+                    raise  # fallback also failed — propagate
+            else:
+                raise  # permanent errors propagate immediately
 
         # Log finish_reason — critical for truncation diagnosis
         self._log_finish_reason(finish_reason, attempt=1)
@@ -182,12 +213,39 @@ class OpenRouterProvider(AIProvider):
         """
         Send a multimodal request (image + text) to a vision-capable model.
 
-        Uses a dedicated vision model configured via _VISION_MODEL.
+        Tries the primary vision model (OPENROUTER_VISION_MODEL).
+        On transient failure (rate-limit, 502/503, model-not-found) automatically
+        retries once with the fallback vision model (OPENROUTER_VISION_FALLBACK_MODEL)
+        if one is configured.
+
         The image is embedded as a base64 data-URI in the OpenAI vision format.
         """
-        import os
-        vision_model = os.getenv("OPENROUTER_VISION_MODEL", _VISION_MODEL)
+        primary_model  = self._config.vision_model
+        fallback_model = getattr(self._config, "vision_fallback_model", None)
+        return await self._vision_with_model(
+            model=primary_model,
+            image_b64=image_b64,
+            image_mime=image_mime,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            fallback_model=fallback_model,
+        )
 
+    async def _vision_with_model(
+        self,
+        model: str,
+        image_b64: str,
+        image_mime: str,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int,
+        temperature: float,
+        *,
+        fallback_model: str | None,
+    ) -> dict[str, Any]:
+        """Internal: POST a vision completion for the given model slug."""
         # Build multimodal user message per OpenAI vision spec
         multimodal_content: list[dict[str, Any]] = [
             {
@@ -203,20 +261,22 @@ class OpenRouterProvider(AIProvider):
         ]
 
         payload: dict[str, Any] = {
-            "model": vision_model,
+            "model": model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": multimodal_content},
             ],
             "max_tokens": max_tokens,
             "temperature": temperature,
-            "response_format": {"type": "json_object"},
+            # response_format is intentionally omitted for the vision path:
+            # multimodal models on OpenRouter often do not support json_object mode.
+            # _parse_json_response() handles markdown-fenced JSON already.
         }
 
         logger.debug(
             "POST %s vision request (model=%s, max_tokens=%d)",
             self._COMPLETIONS_PATH,
-            vision_model,
+            model,
             max_tokens,
         )
 
@@ -233,10 +293,53 @@ class OpenRouterProvider(AIProvider):
                 f"Network error reaching OpenRouter (vision): {exc}",
             )
 
-        self._check_response_status(response)
+        _VISION_FALLBACK_CODES = ("AI_RATE_LIMIT", "AI_SERVICE_UNAVAILABLE", "AI_MODEL_NOT_FOUND")
+
+        try:
+            self._check_response_status(response)
+        except AIProviderError as exc:
+            if fallback_model and exc.code in _VISION_FALLBACK_CODES:
+                logger.warning(
+                    "Vision model %s failed (%s) — retrying with fallback model %s",
+                    model, exc.code, fallback_model,
+                )
+                return await self._vision_with_model(
+                    model=fallback_model,
+                    image_b64=image_b64,
+                    image_mime=image_mime,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    fallback_model=None,  # no further recursion
+                )
+            raise
+
         self._log_response_usage(response)
 
-        content, finish_reason = self._extract_content_and_finish_reason(response)
+        # _extract_content_and_finish_reason may raise AI_SERVICE_UNAVAILABLE for
+        # 200+error bodies (e.g. upstream provider overloaded).  Treat these the
+        # same as HTTP-level transient errors — trigger fallback if available.
+        try:
+            content, finish_reason = self._extract_content_and_finish_reason(response)
+        except AIProviderError as exc:
+            if fallback_model and exc.code in _VISION_FALLBACK_CODES:
+                logger.warning(
+                    "Vision model %s returned error body (%s) — retrying with fallback %s",
+                    model, exc.code, fallback_model,
+                )
+                return await self._vision_with_model(
+                    model=fallback_model,
+                    image_b64=image_b64,
+                    image_mime=image_mime,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    fallback_model=None,
+                )
+            raise
+
         self._log_finish_reason(finish_reason, attempt=1)
 
         if finish_reason == "length":
@@ -262,9 +365,32 @@ class OpenRouterProvider(AIProvider):
 
         Uses the same model as configured for story generation.
         No JSON parsing — returns raw text.
+        Safety-classifier prefixes (e.g. "Response Safety: safe\n...") are
+        stripped before the text is returned to the caller.
+
+        If the primary model returns 404 (AI_MODEL_NOT_FOUND) or is rate-limited,
+        the fallback model is tried once before propagating the error.
         """
+        return await self._chat_with_model(
+            model=self._config.model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            allow_fallback=True,
+        )
+
+    async def _chat_with_model(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        max_tokens: int,
+        temperature: float,
+        *,
+        allow_fallback: bool,
+    ) -> str:
+        """Internal: POST a chat-completion for the given model slug."""
         payload: dict[str, Any] = {
-            "model": self._config.model,
+            "model": model,
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
@@ -273,7 +399,7 @@ class OpenRouterProvider(AIProvider):
         logger.debug(
             "POST %s chat (model=%s, turns=%d)",
             self._COMPLETIONS_PATH,
-            self._config.model,
+            model,
             len(messages),
         )
 
@@ -290,13 +416,31 @@ class OpenRouterProvider(AIProvider):
                 f"Network error reaching OpenRouter (chat): {exc}",
             )
 
-        self._check_response_status(response)
+        try:
+            self._check_response_status(response)
+        except AIProviderError as exc:
+            _FALLBACK_CODES = ("AI_RATE_LIMIT", "AI_SERVICE_UNAVAILABLE", "AI_MODEL_NOT_FOUND")
+            fallback_model = getattr(self._config, "fallback_model", None)
+            if allow_fallback and exc.code in _FALLBACK_CODES and fallback_model:
+                logger.warning(
+                    "Chat model %s failed (%s) — retrying with fallback model %s",
+                    model, exc.code, fallback_model,
+                )
+                return await self._chat_with_model(
+                    model=fallback_model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    allow_fallback=False,  # no further recursion
+                )
+            raise
+
         self._log_response_usage(response)
 
         content, finish_reason = self._extract_content_and_finish_reason(response)
         self._log_finish_reason(finish_reason, attempt=1)
 
-        return content
+        return self._strip_safety_prefix(content)
 
     async def close(self) -> None:
         """Release the underlying HTTP client."""
@@ -360,15 +504,24 @@ class OpenRouterProvider(AIProvider):
         user_prompt: str,
         max_tokens: int,
         temperature: float,
+        *,
+        model: str | None = None,
     ) -> tuple[str, str | None]:
         """
         POST to /chat/completions and return (content_string, finish_reason).
 
         finish_reason may be None if the response envelope omits it.
         Raises AIProviderError on all HTTP / parsing failures.
+
+        Parameters
+        ----------
+        model:
+            Override the model for this specific call (used by fallback logic).
+            If None, uses self._config.model.
         """
+        active_model = model or self._config.model
         payload: dict[str, Any] = {
-            "model": self._config.model,
+            "model": active_model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -381,7 +534,7 @@ class OpenRouterProvider(AIProvider):
         logger.debug(
             "POST %s (model=%s, max_tokens=%d)",
             self._COMPLETIONS_PATH,
-            self._config.model,
+            active_model,
             max_tokens,
         )
 
@@ -428,10 +581,19 @@ class OpenRouterProvider(AIProvider):
                 "AI_RATE_LIMIT",
                 "OpenRouter rate limit exceeded. Try again later.",
             )
-        if response.status_code == 503:
+        if response.status_code == 404:
+            raise AIProviderError(
+                "AI_MODEL_NOT_FOUND",
+                "النموذج المطلوب غير متاح على OpenRouter. "
+                "يرجى التحقق من إعداد OPENROUTER_MODEL أو OPENROUTER_VISION_MODEL في ملف .env.",
+            )
+        if response.status_code in (502, 503):
+            # 502 = upstream provider overloaded (e.g. NVIDIA backend)
+            # 503 = OpenRouter itself temporarily unavailable
+            # Both are transient — the fallback model should be tried.
             raise AIProviderError(
                 "AI_SERVICE_UNAVAILABLE",
-                "OpenRouter is temporarily unavailable. Try again later.",
+                "خدمة الذكاء الاصطناعي غير متاحة مؤقتاً. جارٍ تجربة النموذج الاحتياطي.",
             )
         if not response.is_success:
             try:
@@ -460,6 +622,28 @@ class OpenRouterProvider(AIProvider):
             raise AIProviderError(
                 "AI_INVALID_JSON",
                 "OpenRouter returned a non-JSON response body.",
+            )
+
+        # OpenRouter sometimes returns HTTP 200 but with an error body
+        # (e.g. upstream provider 502 "Service temporarily overloaded").
+        # Detect this early so the fallback logic can trigger on it.
+        if isinstance(body, dict) and "error" in body and "choices" not in body:
+            err = body["error"]
+            err_code = err.get("code") if isinstance(err, dict) else None
+            err_msg  = err.get("message", str(err)) if isinstance(err, dict) else str(err)
+            if err_code in (429, 502, 503):
+                # Transient — trigger fallback
+                ar_msg = "خدمة الذكاء الاصطناعي غير متاحة مؤقتاً. جارٍ تجربة النموذج الاحتياطي."
+                raise AIProviderError("AI_SERVICE_UNAVAILABLE", ar_msg)
+            if err_code == 404:
+                raise AIProviderError(
+                    "AI_MODEL_NOT_FOUND",
+                    "النموذج المطلوب غير متاح على OpenRouter. "
+                    "يرجى التحقق من إعداد OPENROUTER_MODEL أو OPENROUTER_VISION_MODEL في ملف .env.",
+                )
+            raise AIProviderError(
+                "AI_API_ERROR",
+                f"OpenRouter returned an error response: {err_msg[:300]}",
             )
 
         try:
@@ -605,6 +789,77 @@ class OpenRouterProvider(AIProvider):
             )
         else:
             logger.info("finish_reason=%s (attempt %d)", finish_reason, attempt)
+
+    @staticmethod
+    def _strip_safety_prefix(content: str) -> str:
+        """
+        Remove safety-classifier preamble that some OpenRouter-routed models
+        prepend to their actual reply.
+
+        Patterns seen in the wild (all case-insensitive):
+          "Safety: safe\\n<actual reply>"
+          "Response Safety: safe\\n<actual reply>"
+          "User Safety: safe\\n<actual reply>"
+          "safe\\n<actual reply>"
+
+        The heuristic: if the content starts with one of the known classifier
+        labels (optionally followed by a colon, a value, and a newline), strip
+        everything up to and including the first blank line or the first
+        non-classifier line, then return the remainder trimmed.
+
+        If no known prefix is found the content is returned unchanged so that
+        legitimate short replies are never silently discarded.
+        """
+        # Quick exit — no colon on the first line means it's not a classifier header
+        first_line_end = content.find("\n")
+        first_line = content[:first_line_end].strip() if first_line_end != -1 else content.strip()
+        if ":" not in first_line and first_line.lower() not in ("safe", "unsafe"):
+            return content
+
+        _CLASSIFIER_PREFIXES = (
+            "safety:",
+            "response safety:",
+            "user safety:",
+            "content safety:",
+            "input safety:",
+        )
+        lower_first = first_line.lower()
+        is_classifier = (
+            any(lower_first.startswith(p) for p in _CLASSIFIER_PREFIXES)
+            or lower_first in ("safe", "unsafe")
+        )
+        if not is_classifier:
+            return content
+
+        # Strip the classifier header line(s) — consume all leading lines that
+        # look like "Key: value" classifier output, then return what follows.
+        lines = content.splitlines()
+        start_idx = 0
+        for i, line in enumerate(lines):
+            stripped_line = line.strip().lower()
+            if any(stripped_line.startswith(p) for p in _CLASSIFIER_PREFIXES) or stripped_line in ("safe", "unsafe", ""):
+                start_idx = i + 1
+            else:
+                break  # first non-classifier, non-blank line — real content starts here
+
+        remainder = "\n".join(lines[start_idx:]).strip()
+        if remainder:
+            logger.warning(
+                "Stripped safety-classifier prefix from chat response "
+                "(first line was: %r). Returning remainder (%d chars).",
+                first_line,
+                len(remainder),
+            )
+            return remainder
+
+        # The entire response was classifier output — return original so the
+        # caller's error handling can deal with it rather than returning empty.
+        logger.warning(
+            "Safety-classifier prefix detected but no remainder found — "
+            "returning original content (%d chars).",
+            len(content),
+        )
+        return content
 
     @staticmethod
     def _parse_json_response(raw: str) -> dict[str, Any]:

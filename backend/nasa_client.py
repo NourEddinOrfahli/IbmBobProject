@@ -6,11 +6,21 @@ Fetches data from:
 - DONKI space-weather events (optional)
 
 Handles HTTP errors, timeouts, rate limits, and missing fields gracefully.
+
+Performance optimisations (Phase 4):
+- In-memory TTL cache via _TTLCache so repeated calls within the TTL window
+  return instantly without hitting NASA servers.
+  * APOD:      TTL = 3 600 s  (1 hour)   — changes once per day
+  * DONKI/CME: TTL =   900 s  (15 min)   — space-weather updates more often
+- Explicit per-request timeout passed from NASAConfig (default 15 s).
+- Rate-limit (429) and server-error paths return cached stale data when
+  available instead of raising, so the pipeline degrades gracefully.
 """
 
 from __future__ import annotations
 
 import logging
+import time
 from datetime import date
 from typing import Any, Optional
 
@@ -22,6 +32,83 @@ from models import NASAAPODData, NASADONKIEvent
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Tiny in-memory TTL cache
+# ---------------------------------------------------------------------------
+
+class _TTLCache:
+    """
+    Thread-safe, in-process TTL key/value cache.
+
+    Each entry is stored as ``(value, expires_at)``.  After ``expires_at``
+    the entry is treated as absent; a background eviction loop is NOT needed
+    because stale entries are simply overwritten on the next cache miss.
+
+    This is intentionally minimal — no external dependencies, no async
+    primitives required (dict access in CPython is GIL-protected).
+    """
+
+    def __init__(self) -> None:
+        self._store: dict[str, tuple[Any, float]] = {}
+
+    def get(self, key: str) -> Any:
+        """Return the cached value or ``_MISS`` sentinel if absent/expired."""
+        entry = self._store.get(key)
+        if entry is None:
+            return _MISS
+        value, expires_at = entry
+        if time.monotonic() > expires_at:
+            # Expired — remove and signal miss
+            del self._store[key]
+            return _MISS
+        return value
+
+    def set(self, key: str, value: Any, ttl_seconds: float) -> None:
+        """Store *value* under *key* for *ttl_seconds* seconds."""
+        self._store[key] = (value, time.monotonic() + ttl_seconds)
+
+    def invalidate(self, key: str) -> None:
+        """Remove a single cache entry (no-op if absent)."""
+        self._store.pop(key, None)
+
+    def clear(self) -> None:
+        """Remove all entries (useful in tests)."""
+        self._store.clear()
+
+    def __len__(self) -> int:
+        # Evict expired entries before reporting size
+        now = time.monotonic()
+        expired = [k for k, (_, exp) in self._store.items() if now > exp]
+        for k in expired:
+            del self._store[k]
+        return len(self._store)
+
+
+_MISS = object()  # sentinel — distinct from None so None can be a valid cached value
+
+# Module-level shared caches (one per data type)
+_apod_cache:  _TTLCache = _TTLCache()
+_donki_cache: _TTLCache = _TTLCache()
+
+# TTL constants
+_APOD_TTL_SECONDS:  float = 3_600.0   # 1 hour  — APOD changes once per day
+_DONKI_TTL_SECONDS: float =   900.0   # 15 min  — space-weather updates more often
+
+
+# ---------------------------------------------------------------------------
+# Public helper: allow tests / admin endpoints to flush caches
+# ---------------------------------------------------------------------------
+
+def clear_nasa_caches() -> None:
+    """Flush all NASA response caches.  Call from tests or admin endpoints."""
+    _apod_cache.clear()
+    _donki_cache.clear()
+
+
+# ---------------------------------------------------------------------------
+# Exception
+# ---------------------------------------------------------------------------
+
 class NASAClientError(Exception):
     """Raised when a NASA API call fails in a way the caller must handle."""
 
@@ -31,12 +118,20 @@ class NASAClientError(Exception):
         self.message = message
 
 
+# ---------------------------------------------------------------------------
+# NASAClient
+# ---------------------------------------------------------------------------
+
 class NASAClient:
-    """Thin async wrapper around the NASA public APIs."""
+    """Thin async wrapper around the NASA public APIs with TTL caching."""
 
     def __init__(self, config: NASAConfig) -> None:
         self._config = config
+        # Primary client uses the APOD timeout (3 s by default — keeps dashboard snappy).
         self._client = httpx.AsyncClient(timeout=config.request_timeout)
+        # Separate client for DONKI — uses the longer donki_request_timeout (12 s default)
+        # because the DONKI endpoint is significantly slower than APOD.
+        self._donki_client = httpx.AsyncClient(timeout=config.donki_request_timeout)
 
     # ------------------------------------------------------------------
     # Public helpers
@@ -45,6 +140,10 @@ class NASAClient:
     async def get_apod(self, apod_date: Optional[str] = None) -> NASAAPODData:
         """
         Fetch the Astronomy Picture of the Day.
+
+        Cache key includes the requested date so different dates are stored
+        independently.  ``None`` (today) is normalised to the literal string
+        ``"today"`` for stable cache keys.
 
         Parameters
         ----------
@@ -55,19 +154,45 @@ class NASAClient:
         Returns
         -------
         NASAAPODData
-            Normalised payload.
 
         Raises
         ------
         NASAClientError
-            On any retrieval or validation failure.
+            On any retrieval or validation failure when no stale cache entry
+            is available.
         """
+        cache_key = f"apod:{apod_date or 'today'}"
+
+        # ── Cache hit ─────────────────────────────────────────────────────
+        cached = _apod_cache.get(cache_key)
+        if cached is not _MISS:
+            logger.debug("NASA APOD cache hit (key=%s)", cache_key)
+            return cached  # type: ignore[return-value]
+
+        # ── Fetch from NASA ───────────────────────────────────────────────
         params: dict[str, str] = {"api_key": self._config.api_key}
         if apod_date:
             params["date"] = apod_date
 
-        raw = await self._get(self._config.apod_url, params, source="APOD")
-        return self._normalise_apod(raw)
+        try:
+            raw = await self._get(self._config.apod_url, params, source="APOD")
+        except NASAClientError:
+            # On transient failure, serve stale cached data if we have it.
+            # (Cache already expired at this point — check the raw store.)
+            stale = self._stale_apod(cache_key)
+            if stale is not None:
+                logger.warning(
+                    "NASA APOD fetch failed — serving stale cache for key=%s", cache_key
+                )
+                return stale
+            raise  # no stale data available — propagate
+
+        result = self._normalise_apod(raw)
+        _apod_cache.set(cache_key, result, _APOD_TTL_SECONDS)
+        logger.debug(
+            "NASA APOD fetched and cached (key=%s, ttl=%.0fs)", cache_key, _APOD_TTL_SECONDS
+        )
+        return result
 
     async def get_donki_cme(
         self,
@@ -77,9 +202,18 @@ class NASAClient:
         """
         Fetch Coronal Mass Ejection events from DONKI.
 
-        Returns an empty list if the endpoint fails, so the rest of the
-        pipeline can continue without CME data.
+        Returns an empty list if the endpoint fails and no stale data exists,
+        so the rest of the pipeline can continue without CME data.
         """
+        cache_key = f"donki:cme:{start_date or ''}:{end_date or ''}"
+
+        # ── Cache hit ─────────────────────────────────────────────────────
+        cached = _donki_cache.get(cache_key)
+        if cached is not _MISS:
+            logger.debug("NASA DONKI cache hit (key=%s)", cache_key)
+            return cached  # type: ignore[return-value]
+
+        # ── Fetch from NASA ───────────────────────────────────────────────
         url = f"{self._config.donki_url}/CME"
         params: dict[str, str] = {"api_key": self._config.api_key}
         if start_date:
@@ -88,10 +222,12 @@ class NASAClient:
             params["endDate"] = end_date
 
         try:
-            raw_list = await self._get(url, params, source="DONKI/CME")
+            raw_list = await self._get(url, params, source="DONKI/CME", client=self._donki_client)
         except NASAClientError as exc:
             logger.warning("DONKI CME fetch failed (non-fatal): %s", exc.message)
-            return []
+            # Serve stale if available
+            stale = self._stale_donki(cache_key)
+            return stale if stale is not None else []
 
         if not isinstance(raw_list, list):
             logger.warning("DONKI CME returned unexpected type: %s", type(raw_list))
@@ -103,11 +239,34 @@ class NASAClient:
                 events.append(self._normalise_donki_cme(item))
             except Exception as exc:  # noqa: BLE001
                 logger.debug("Skipping malformed DONKI item: %s", exc)
+
+        _donki_cache.set(cache_key, events, _DONKI_TTL_SECONDS)
+        logger.debug(
+            "NASA DONKI fetched and cached (key=%s, events=%d, ttl=%.0fs)",
+            cache_key, len(events), _DONKI_TTL_SECONDS,
+        )
         return events
 
     async def close(self) -> None:
-        """Release the underlying HTTP client."""
+        """Release the underlying HTTP clients."""
         await self._client.aclose()
+        await self._donki_client.aclose()
+
+    # ------------------------------------------------------------------
+    # Stale-data helpers (access raw _store before eviction)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _stale_apod(cache_key: str) -> Optional[NASAAPODData]:
+        """Return any cached APOD entry regardless of expiry, or None."""
+        entry = _apod_cache._store.get(cache_key)  # noqa: SLF001
+        return entry[0] if entry is not None else None
+
+    @staticmethod
+    def _stale_donki(cache_key: str) -> Optional[list[NASADONKIEvent]]:
+        """Return any cached DONKI entry regardless of expiry, or None."""
+        entry = _donki_cache._store.get(cache_key)  # noqa: SLF001
+        return entry[0] if entry is not None else None
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -118,20 +277,27 @@ class NASAClient:
         url: str,
         params: dict[str, str],
         source: str,
+        *,
+        client: "httpx.AsyncClient | None" = None,
     ) -> Any:
         """
         Perform an async GET request and return the parsed JSON body.
 
+        ``client`` defaults to ``self._client`` (APOD timeout).  Pass
+        ``self._donki_client`` for DONKI requests to use the longer timeout.
+
         Raises NASAClientError on any failure so the caller can handle it
         uniformly without worrying about HTTP details.
         """
-        logger.debug("NASA %s request → %s", source, url)
+        http = client if client is not None else self._client
+        timeout_s = http.timeout.read if hasattr(http, "timeout") else self._config.request_timeout
+        logger.debug("NASA %s request -> %s", source, url)
         try:
-            response = await self._client.get(url, params=params)
+            response = await http.get(url, params=params)
         except httpx.TimeoutException:
             raise NASAClientError(
                 "NASA_TIMEOUT",
-                f"Request to NASA {source} timed out after {self._config.request_timeout}s",
+                f"Request to NASA {source} timed out after {timeout_s}s",
             )
         except httpx.RequestError as exc:
             raise NASAClientError(
@@ -145,7 +311,6 @@ class NASAClient:
                 f"NASA {source} rate limit exceeded. Try again later.",
             )
         if response.status_code == 400:
-            # NASA returns a JSON body with an error message for bad requests
             detail = self._safe_error_text(response)
             raise NASAClientError(
                 "NASA_BAD_REQUEST",
@@ -183,7 +348,6 @@ class NASAClient:
                 "APOD response was not a JSON object.",
             )
 
-        # Mandatory fields
         title = raw.get("title") or ""
         explanation = raw.get("explanation") or ""
         date_str = raw.get("date") or str(date.today())
@@ -195,12 +359,10 @@ class NASAClient:
                 "APOD response is missing required fields (title / explanation).",
             )
 
-        # Optional fields
         url = raw.get("url")
         hdurl = raw.get("hdurl")
         copyright_ = raw.get("copyright")
 
-        # Capture everything else as additional_data for completeness
         known_keys = {"title", "explanation", "date", "media_type", "url", "hdurl", "copyright"}
         additional = {k: v for k, v in raw.items() if k not in known_keys}
 

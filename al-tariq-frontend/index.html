@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Al-Tariq — Space Interpreter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <strong>Al-Tariq <span class="live" id="live-dot"></span></strong>
+        <small>Space Interpreter</small>
+      </div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav">
+      <a href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="interpreter.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18"><path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2"/></svg>
+        <span>Image Interpreter</span>
+      </a>
+      <a href="chat.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 10h8"/></svg>
+        <span>AI Space Chat</span>
+      </a>
+      <a href="stories.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <span>Cosmos Stories</span>
+      </a>
+      <a href="favorites.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18"><path d="m12 20-7-7a4.5 4.5 0 0 1 6.4-6.3L12 7.3l.6-.6A4.5 4.5 0 0 1 19 13l-7 7Z"/></svg>
+        <span>Favorites</span>
+      </a>
+    </nav>
+    <div class="side-footer">MISSION STATUS<br><b id="system-status-label">CONNECTING…</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">MISSION CONTROL / DAILY BRIEF</span>
+      <span class="mono muted" id="topbar-date">—</span>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <div class="eyebrow">THE MORNING BULLETIN · SIGNAL 001</div>
+        <h1 class="display">Understand the Cosmos Differently.</h1>
+        <p class="subtitle">Al-Tariq translates the universe's most complex signals into clear, human stories — powered by NASA data and an intelligent space interpreter.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="chat.html">Ask AI Assistant →</a>
+          <a class="btn btn-ghost" href="interpreter.html">Analyze Space Image ↗</a>
+        </div>
+        <div class="hero-meta">
+          <div><span>LIVE SOURCE</span><b>NASA APOD</b></div>
+          <div><span>AI CONFIDENCE</span><b id="hero-confidence">—</b></div>
+          <div><span>STORY MODE</span><b>ENABLED</b></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="orbit"></div>
+        <div class="orbit two"></div>
+        <div class="jet"></div>
+        <div class="jet back"></div>
+        <div class="pulsar"></div>
+        <div class="visual-label">AL-TARIQ / PULSAR CORE</div>
+      </div>
+    </section>
+
+    <!-- Today's Signal section -->
+    <div class="section-title">
+      <div>
+        <h2>Today's signal</h2>
+        <p>A NASA image, interpreted into a story worth remembering.</p>
+      </div>
+      <span class="tag green" id="apod-live-tag">LIVE APOD FEED</span>
+    </div>
+
+    <!-- Bulletin card — loading / error / content -->
+    <section id="bulletin-card-wrap">
+      <!-- Skeleton shown while loading -->
+      <div id="bulletin-loading" class="card story-card" aria-live="polite">
+        <div class="story-image" style="background:rgba(0,240,255,.05);display:grid;place-items:center">
+          <span class="loading"><i></i><i></i><i></i></span>
+        </div>
+        <div class="story-copy">
+          <div class="card-head">
+            <div>
+              <span class="tag">LOADING</span>
+              <h2 style="color:var(--muted)">Fetching today's signal…</h2>
+            </div>
+          </div>
+          <p style="color:var(--muted)">Connecting to NASA and generating the daily story. This may take up to 30 seconds on the first request.</p>
+          <div class="facts">
+            <div class="fact" style="opacity:.4">
+              <div class="icon-box">◉</div>
+              <div><strong style="background:var(--line);color:transparent;border-radius:4px">Initialising…</strong><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="bulletin-error" class="card" style="display:none">
+        <div class="card-head">
+          <span class="tag" style="color:var(--danger);background:rgba(251,113,133,.1)">ERROR</span>
+          <button class="btn btn-ghost" id="bulletin-retry" style="font-size:12px">Retry →</button>
+        </div>
+        <h2 id="bulletin-error-msg" style="font-size:16px;color:var(--danger)">Could not load today's bulletin.</h2>
+        <p class="muted" style="font-size:13px">Make sure the backend is running at <code id="backend-url-display"></code>. Check that <strong>OPENROUTER_API_KEY</strong> and <strong>NASA_API_KEY</strong> are set in your <code>.env</code> file.</p>
+      </div>
+
+      <!-- Real bulletin content (hidden until loaded) -->
+      <div id="bulletin-content" class="card story-card" style="display:none">
+        <div id="bulletin-image" class="story-image" style="position:relative">
+          <!-- Image or video placeholder rendered by JS -->
+        </div>
+        <div class="story-copy">
+          <div class="card-head">
+            <div>
+              <span class="tag" id="bulletin-tag">APOD</span>
+              <h2 id="bulletin-title">—</h2>
+            </div>
+            <button class="favorite" aria-label="Save story" id="bulletin-fav">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="17"><path d="m12 3 2.8 5.6 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.5l6.2-.9L12 3Z"/></svg>
+            </button>
+          </div>
+          <p id="bulletin-summary"></p>
+          <div class="facts" id="bulletin-facts"></div>
+          <!-- Copyright line -->
+          <p id="bulletin-copyright" class="muted" style="font-size:11px;margin-top:16px;display:none"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Space Weather -->
+    <div class="section-title" style="margin-top:40px">
+      <div>
+        <h2>Space weather</h2>
+        <p>Solar activity translated into a simple threat picture.</p>
+      </div>
+      <span class="tag gold">DONKI / CME</span>
+    </div>
+
+    <!-- Weather loading -->
+    <section id="weather-loading" class="grid grid-2">
+      <div class="card weather">
+        <div class="card-head"><div><span class="eyebrow">CME EVENTS</span><h2 style="color:var(--muted)">Loading…</h2></div></div>
+        <div class="metric" style="color:var(--muted)">—</div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">SPACE WEATHER DETAIL</span>
+        <div class="metric" style="color:var(--muted)">—</div>
+      </div>
+    </section>
+
+    <!-- Weather content (hidden until loaded) -->
+    <section id="weather-content" class="grid grid-2" style="display:none"></section>
+
+    <!-- System Status -->
+    <div class="section-title" style="margin-top:40px">
+      <div><h2>System status</h2><p>Backend and scheduler health.</p></div>
+      <span class="mono muted" id="status-sync-time">—</span>
+    </div>
+    <section class="card" id="system-status-card">
+      <div style="color:var(--muted);font-size:13px">Loading system status…</div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Index page bootstrap ──────────────────────────────────────────────────
+
+// Show backend URL in error card
+document.getElementById('backend-url-display').textContent =
+  window.AL_TARIQ_API_URL || 'http://localhost:8000';
+
+// Date in topbar
+const now = new Date();
+document.getElementById('topbar-date').textContent =
+  now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
+  + ' · ' + now.toUTCString().slice(17, 22) + ' UTC';
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+function show(id)  { const el = document.getElementById(id); if (el) el.style.display = ''; }
+function hide(id)  { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+function text(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+function confidenceLabel(c) {
+  const map = { high: '98.4%', medium: '76%', low: '52%' };
+  return map[c] || c || '—';
+}
+
+// ── Bulletin (daily-news) ─────────────────────────────────────────────────
+
+async function loadBulletin() {
+  hide('bulletin-error');
+  hide('bulletin-content');
+  show('bulletin-loading');
+
+  let story;
+  try {
+    story = await AlTariqAPI.fetchDailyNews();
+  } catch (err) {
+    hide('bulletin-loading');
+    document.getElementById('bulletin-error-msg').textContent =
+      err.message || 'Could not load today's bulletin.';
+    show('bulletin-error');
+    document.getElementById('system-status-label').textContent = t('BACKEND OFFLINE');
+    return;
+  }
+
+  // ── Populate hero confidence ──────────────────────────────────────────
+  text('hero-confidence', confidenceLabel(story.confidence));
+
+  // ── Populate bulletin card ────────────────────────────────────────────
+  const sd = story.source_data || {};
+
+  // Title
+  text('bulletin-title', story.title || sd.title || '—');
+
+  // Tag
+  text('bulletin-tag', t(sd.media_type === 'video' ? 'VIDEO / APOD' : 'DEEP SPACE / APOD'));
+
+  // Image or video placeholder
+  const imgEl = document.getElementById('bulletin-image');
+  if (sd.media_type === 'video') {
+    imgEl.innerHTML = `
+      <div style="display:grid;place-items:center;height:100%;min-height:280px;background:rgba(0,240,255,.04)">
+        <div style="text-align:center;padding:20px">
+          <div style="font-size:36px;margin-bottom:10px">▶</div>
+          <p class="muted" style="font-size:12px">Video APOD — open on NASA.gov</p>
+          ${sd.image_url ? `<a class="btn btn-ghost" href="${sd.image_url}" target="_blank" rel="noopener" style="margin-top:12px;font-size:12px">Open video ↗</a>` : ''}
+        </div>
+      </div>`;
+  } else if (sd.image_url) {
+    imgEl.style.backgroundImage = `url('${sd.hd_image_url || sd.image_url}')`;
+    imgEl.style.backgroundSize = 'cover';
+    imgEl.style.backgroundPosition = 'center';
+  } else {
+    imgEl.innerHTML = `<div style="display:grid;place-items:center;height:100%;min-height:280px;background:linear-gradient(135deg,rgba(0,240,255,.06),rgba(123,0,255,.12))"><span style="font-size:32px;opacity:.4">✦</span></div>`;
+  }
+
+  // Summary
+  text('bulletin-summary', story.summary || '');
+
+  // Key facts
+  const factsEl = document.getElementById('bulletin-facts');
+  const icons = ['◉', '◌', '▱'];
+  const factItems = [];
+  if (story.scientific_explanation) factItems.push({ label: t('Scientific analysis'), text: story.scientific_explanation });
+  if (story.why_it_matters)        factItems.push({ label: t('Why it matters'),      text: story.why_it_matters });
+  if (story.key_facts && story.key_facts[0]) factItems.push({ label: t('Key fact'), text: story.key_facts[0] });
+
+  factsEl.innerHTML = factItems.map((f, i) => `
+    <div class="fact">
+      <div class="icon-box">${icons[i % icons.length]}</div>
+      <div><strong>${f.label}</strong><span>${f.text}</span></div>
+    </div>`).join('');
+
+  // Copyright
+  if (sd.copyright) {
+    text('bulletin-copyright', '© ' + sd.copyright);
+    show('bulletin-copyright');
+  }
+
+  // Favorites button wiring
+  const favBtn = document.getElementById('bulletin-fav');
+  const favId = 'apod-' + (sd.date || 'today');
+  function updateFavBtn() {
+    const favs = JSON.parse(localStorage.getItem('al-tariq-apod-favs') || '[]');
+    favBtn.className = 'favorite' + (favs.includes(favId) ? ' saved' : '');
+  }
+  updateFavBtn();
+  favBtn.onclick = () => {
+    let favs = JSON.parse(localStorage.getItem('al-tariq-apod-favs') || '[]');
+    favs = favs.includes(favId) ? favs.filter(x => x !== favId) : [...favs, favId];
+    localStorage.setItem('al-tariq-apod-favs', JSON.stringify(favs));
+    updateFavBtn();
+  };
+
+  // ── Space weather from story.space_weather ────────────────────────────
+  renderWeather(story.space_weather);
+
+  // ── Show content ──────────────────────────────────────────────────────
+  hide('bulletin-loading');
+  show('bulletin-content');
+  document.getElementById('system-status-label').textContent = t('AI SYSTEMS ONLINE');
+  document.getElementById('live-dot').style.display = 'inline-block';
+}
+
+// ── Space Weather renderer ────────────────────────────────────────────────
+
+function renderWeather(sw) {
+  hide('weather-loading');
+  const wc = document.getElementById('weather-content');
+
+  if (!sw || !sw.available || sw.event_count === 0) {
+    wc.innerHTML = `
+      <div class="card weather" style="grid-column:1/-1">
+        <div class="card-head">
+          <div><span class="eyebrow">SPACE WEATHER</span><h2>${t('No active events')}</h2></div>
+          <span class="tag green">${t('STABLE')}</span>
+        </div>
+        <p class="muted">${t('No significant CME events detected in the current monitoring window.')}</p>
+      </div>`;
+    show('weather-content');
+    return;
+  }
+
+  // Summary card
+  const kpValues = sw.events.filter(e => e.kp_index !== null).map(e => e.kp_index);
+  const maxKp = kpValues.length ? Math.max(...kpValues) : null;
+  const earthDir = sw.events.some(e => e.is_earth_directed);
+  const threatLabel = earthDir ? 'Elevated / watch' : 'Low / stable';
+  const threatColor = earthDir ? 'var(--danger)' : 'var(--green)';
+  const kpDisplay = maxKp !== null ? `Kp ${maxKp.toFixed(1)}` : `${sw.event_count} CME event${sw.event_count > 1 ? 's' : ''}`;
+  const meterWidth = maxKp !== null ? Math.min(100, (maxKp / 9) * 100) : 30;
+
+  let summaryCard = `
+    <div class="card weather">
+      <div class="card-head">
+        <div><span class="eyebrow">GEOMAGNETIC MONITOR</span><h2>${t(earthDir ? 'Earth-directed activity' : 'Quiet, with a watch signal')}</h2></div>
+        <div class="icon-box">◉</div>
+      </div>
+      <div class="metric">${kpDisplay}</div>
+      <div class="meter"><i style="width:${meterWidth}%;background:linear-gradient(90deg,var(--cyan),${earthDir ? 'var(--danger)' : 'var(--purple)'})"></i></div>
+      <div class="weather-row"><span>${t('Threat level')}</span><b style="color:${threatColor}">${t(threatLabel)}</b></div>
+      <div class="weather-row"><span>${t('Active CME events')}</span><b>${sw.event_count}</b></div>
+    </div>`;
+
+  // Detail card — first event
+  const evt = sw.events[0];
+  let detailCard = `
+    <div class="card">
+      <div class="card-head">
+        <div><span class="eyebrow">CORONAL MASS EJECTION</span><h2>${t(evt.is_earth_directed ? 'Earth-directed' : 'Not Earth-directed')}</h2></div>
+        <span class="tag ${evt.is_earth_directed ? '' : 'green'}">${t(evt.is_earth_directed ? 'WATCH' : 'STABLE')}</span>
+      </div>
+      <div class="weather-list">`;
+
+  if (evt.speed_kmps !== null)        detailCard += `<div class="weather-row"><span>${t('Estimated speed')}</span><b>${Math.round(evt.speed_kmps)} km/s</b></div>`;
+  if (evt.begin_time)                 detailCard += `<div class="weather-row"><span>${t('UTC start')}</span><b>${evt.begin_time.replace('T', ' · ').slice(0, 19)}</b></div>`;
+  if (evt.source_location)            detailCard += `<div class="weather-row"><span>${t('Source location')}</span><b>${evt.source_location}</b></div>`;
+  if (evt.estimated_arrival)          detailCard += `<div class="weather-row"><span>${t('Est. arrival')}</span><b>${evt.estimated_arrival.replace('T', ' · ').slice(0, 19)}</b></div>`;
+  if (evt.kp_index !== null)          detailCard += `<div class="weather-row"><span>${t('Kp index')}</span><b>${evt.kp_index.toFixed(1)} / 9</b></div>`;
+  if (!evt.speed_kmps && !evt.begin_time) detailCard += `<div class="weather-row"><span>${t('Status')}</span><b>${t('Monitoring active')}</b></div>`;
+
+  detailCard += `</div></div>`;
+  wc.innerHTML = summaryCard + detailCard;
+  show('weather-content');
+}
+
+// ── System status ─────────────────────────────────────────────────────────
+
+async function loadSystemStatus() {
+  let data;
+  try {
+    data = await AlTariqAPI.fetchDailyNewsStatus();
+  } catch {
+    document.getElementById('system-status-card').innerHTML =
+      `<p class="muted" style="font-size:13px">${t('Status unavailable — backend may be offline.')}</p>`;
+    return;
+  }
+
+  const sc = data.scheduler || {};
+  const lb = data.latest_bulletin;
+  const now = new Date().toUTCString().slice(17, 22);
+  document.getElementById('status-sync-time').textContent = `${t('LAST SYNC')} · ${now} UTC`;
+
+  let html = `<div class="grid grid-2" style="gap:12px">`;
+
+  // Scheduler
+  const schedColor = sc.enabled ? 'var(--green)' : 'var(--muted)';
+  html += `
+    <div>
+      <div class="eyebrow" style="margin-bottom:10px">${t('SCHEDULER')}</div>
+      <div class="weather-list">
+        <div class="weather-row"><span>${t('Enabled')}</span><b style="color:${schedColor}">${t(sc.enabled ? 'YES' : 'NO')}</b></div>
+        <div class="weather-row"><span>${t('Last run')}</span><b>${sc.last_run ? sc.last_run.replace('T', ' ').slice(0, 19) + ' UTC' : '—'}</b></div>
+        <div class="weather-row"><span>${t('Last status')}</span><b>${sc.status || '—'}</b></div>
+        <div class="weather-row"><span>${t('APOD date')}</span><b>${sc.apod_date || '—'}</b></div>
+      </div>
+    </div>`;
+
+  // Latest bulletin
+  html += `
+    <div>
+      <div class="eyebrow" style="margin-bottom:10px">${t('LATEST BULLETIN')}</div>
+      <div class="weather-list">`;
+  if (lb) {
+    html += `
+        <div class="weather-row"><span>${t('APOD date')}</span><b>${lb.apod_date}</b></div>
+        <div class="weather-row"><span>${t('Status')}</span><b style="color:${lb.status === 'success' ? 'var(--green)' : 'var(--danger)'}">${lb.status.toUpperCase()}</b></div>
+        <div class="weather-row"><span>${t('Generated')}</span><b>${lb.generated_at.replace('T', ' ').slice(0, 19)} UTC</b></div>`;
+  } else {
+    html += `<div class="weather-row"><span>${t('Status')}</span><b style="color:var(--muted)">${t('No bulletin generated yet')}</b></div>`;
+  }
+  html += `</div></div>`;
+  html += `</div>`;
+
+  document.getElementById('system-status-card').innerHTML = html;
+}
+
+// ── Retry button ──────────────────────────────────────────────────────────
+document.getElementById('bulletin-retry').addEventListener('click', loadBulletin);
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+loadBulletin();
+loadSystemStatus();
+</script>
+</body>
+</html>

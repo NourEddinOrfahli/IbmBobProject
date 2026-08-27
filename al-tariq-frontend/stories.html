@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cosmos Stories — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav">
+      <a href="index.html"><span>Home</span></a>
+      <a href="interpreter.html"><span>Image Interpreter</span></a>
+      <a href="chat.html"><span>AI Space Chat</span></a>
+      <a href="stories.html" class="active"><span>Cosmos Stories</span></a>
+      <a href="favorites.html"><span>Favorites</span></a>
+    </nav>
+    <div class="side-footer">MISSION STATUS<br><b>ARCHIVE ONLINE</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">ARCHIVE / COSMOS STORIES</span>
+      <span class="mono muted">NASA APOD INDEX</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">THE UNIVERSE, IN CONTEXT</div>
+        <h1>Stories from the dark.</h1>
+        <p>A living archive of images, signals, and the science behind the view.</p>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input id="story-search" class="search" type="search" placeholder="Search stories…">
+      <div class="filters">
+        <button class="filter active" data-filter="ALL">All</button>
+        <button class="filter" data-filter="image">Images</button>
+        <button class="filter" data-filter="video">Videos</button>
+      </div>
+    </div>
+
+    <!-- Grid: loading / error / content -->
+    <section id="story-grid" class="story-grid">
+      <!-- Skeleton cards -->
+      <div class="card story-tile skeleton-tile">
+        <div class="tile-image" style="background:rgba(0,240,255,.04);display:grid;place-items:center">
+          <span class="loading"><i></i><i></i><i></i></span>
+        </div>
+        <div class="tile-content"><p class="muted" style="font-size:12px">Loading…</p></div>
+      </div>
+      <div class="card story-tile skeleton-tile">
+        <div class="tile-image" style="background:rgba(0,240,255,.04)"></div>
+        <div class="tile-content"></div>
+      </div>
+      <div class="card story-tile skeleton-tile">
+        <div class="tile-image" style="background:rgba(0,240,255,.04)"></div>
+        <div class="tile-content"></div>
+      </div>
+    </section>
+
+    <!-- Load more -->
+    <div style="text-align:center;margin-top:28px">
+      <button id="load-more" class="btn btn-ghost">Load more archive signals</button>
+    </div>
+
+    <!-- Story detail modal -->
+    <div id="story-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(3,5,17,.85);z-index:100;overflow-y:auto;padding:40px 20px">
+      <div id="story-modal" style="max-width:680px;margin:0 auto;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+          <span class="eyebrow">APOD DETAIL</span>
+          <button id="modal-close" class="btn" style="padding:6px 12px;font-size:12px">✕ Close</button>
+        </div>
+        <div id="modal-image-wrap" style="min-height:280px;background:rgba(0,240,255,.04)"></div>
+        <div style="padding:24px">
+          <span id="modal-tag" class="tag" style="margin-bottom:12px;display:inline-flex"></span>
+          <h2 id="modal-title" style="margin:10px 0 8px"></h2>
+          <p id="modal-date" class="mono muted" style="font-size:11px;margin-bottom:16px"></p>
+          <p id="modal-summary" style="color:var(--muted);font-size:14px;line-height:1.7"></p>
+          <p id="modal-copyright" class="muted" style="font-size:11px;margin-top:12px"></p>
+          <div class="actions" style="margin-top:20px">
+            <button id="modal-fav-btn" class="btn">Save to favorites</button>
+            <a id="modal-nasa-link" href="#" target="_blank" rel="noopener" class="btn btn-ghost" style="font-size:13px">View on NASA ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Stories page ──────────────────────────────────────────────────────────
+
+let allStories = [];
+let currentFilter = 'ALL';
+let currentQuery = '';
+let loadedCount = 10;
+let currentModalStory = null;
+
+// ── Favorites helpers ─────────────────────────────────────────────────────
+function getStoreFavs() {
+  try { return JSON.parse(localStorage.getItem('al-tariq-favorites') || '[]'); } catch { return []; }
+}
+function toggleStoreFav(story) {
+  let f = getStoreFavs();
+  const exists = f.some(x => x.id === story.id);
+  f = exists ? f.filter(x => x.id !== story.id) : [story, ...f];
+  localStorage.setItem('al-tariq-favorites', JSON.stringify(f));
+  return !exists;
+}
+function isFav(id) { return getStoreFavs().some(x => x.id === id); }
+
+// ── Render grid ────────────────────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('story-grid');
+  const q = currentQuery.toLowerCase();
+  const filtered = allStories.filter(s => {
+    const matchFilter = currentFilter === 'ALL' || s.media_type === currentFilter;
+    const matchQuery = !q || s.title.toLowerCase().includes(q) || (s.summary || '').toLowerCase().includes(q);
+    return matchFilter && matchQuery;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="card empty" style="grid-column:1/-1">
+      <h2>${t('No stories found')}</h2>
+      <p class="muted">${t('Try a different search or filter.')}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(s => {
+    const faved = isFav(s.id);
+    const hasImg = s.image_url && s.media_type !== 'video';
+    const imgStyle = hasImg
+      ? `background-image:url('${s.image_url}');background-size:cover;background-position:center`
+      : `background:linear-gradient(135deg,rgba(0,240,255,.06),rgba(123,0,255,.14));display:grid;place-items:center`;
+    const placeholder = !hasImg
+      ? `<span style="font-size:24px;opacity:.3">${s.media_type === 'video' ? '▶' : '✦'}</span>`
+      : '';
+    return `
+      <article class="card story-tile" data-id="${s.id}" style="cursor:pointer" tabindex="0" aria-label="${s.title}">
+        <div class="tile-image" style="${imgStyle}">${placeholder}</div>
+        <div class="tile-content">
+          <div class="card-head">
+            <span class="tag${s.media_type === 'video' ? ' gold' : ''}">${t(s.media_type === 'video' ? 'VIDEO' : 'APOD')}</span>
+            <button class="favorite${faved ? ' saved' : ''}" data-fav-id="${s.id}" aria-label="${faved ? 'Remove from favorites' : 'Save to favorites'}" title="${faved ? 'Saved' : 'Save'}">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="17"><path d="m12 3 2.8 5.6 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.5l6.2-.9L12 3Z"/></svg>
+            </button>
+          </div>
+          <h3 style="min-height:auto">${s.title}</h3>
+          <p>${(s.summary || '').slice(0, 120)}${s.summary && s.summary.length > 120 ? '…' : ''}</p>
+          <div class="tile-foot">
+            <span>${s.date}</span>
+            <span>${s.source || 'NASA APOD'}</span>
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+
+  // Card click → modal
+  grid.querySelectorAll('.story-tile').forEach(card => {
+    card.onclick = (e) => {
+      if (e.target.closest('[data-fav-id]')) return; // handled by fav button
+      const id = card.dataset.id;
+      const story = allStories.find(s => s.id === id);
+      if (story) openModal(story);
+    };
+    card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') card.click(); };
+  });
+
+  // Fav buttons
+  grid.querySelectorAll('[data-fav-id]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.favId;
+      const story = allStories.find(s => s.id === id);
+      if (!story) return;
+      const added = toggleStoreFav(story);
+      btn.className = 'favorite' + (added ? ' saved' : '');
+      btn.title = added ? 'Saved' : 'Save';
+    };
+  });
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function openModal(story) {
+  currentModalStory = story;
+  const overlay = document.getElementById('story-modal-overlay');
+
+  // Image or placeholder
+  const imgWrap = document.getElementById('modal-image-wrap');
+  if (story.image_url && story.media_type !== 'video') {
+    imgWrap.style.backgroundImage = `url('${story.hd_image_url || story.image_url}')`;
+    imgWrap.style.backgroundSize = 'cover';
+    imgWrap.style.backgroundPosition = 'center';
+    imgWrap.style.minHeight = '280px';
+    imgWrap.innerHTML = '';
+  } else if (story.media_type === 'video') {
+    imgWrap.style.background = 'rgba(0,240,255,.04)';
+    imgWrap.innerHTML = `<div style="display:grid;place-items:center;min-height:160px;padding:30px;text-align:center"><div style="font-size:40px;margin-bottom:10px">▶</div><p class="muted" style="font-size:13px">Video APOD</p></div>`;
+  } else {
+    imgWrap.style.background = 'linear-gradient(135deg,rgba(0,240,255,.06),rgba(123,0,255,.1))';
+    imgWrap.innerHTML = `<div style="display:grid;place-items:center;min-height:160px"><span style="font-size:40px;opacity:.3">✦</span></div>`;
+  }
+
+  document.getElementById('modal-tag').textContent = t(story.media_type === 'video' ? 'VIDEO / APOD' : 'APOD');
+  document.getElementById('modal-title').textContent = story.title;
+  document.getElementById('modal-date').textContent = story.date + ' · ' + (story.source || 'NASA APOD');
+  document.getElementById('modal-summary').textContent = story.summary || '';
+  document.getElementById('modal-copyright').textContent = story.copyright ? '© ' + story.copyright : '';
+
+  // NASA link
+  const nasaLink = document.getElementById('modal-nasa-link');
+  if (story.date) {
+    const d = story.date.replace(/-/g, '').slice(2);
+    nasaLink.href = `https://apod.nasa.gov/apod/ap${d}.html`;
+    nasaLink.style.display = '';
+  } else {
+    nasaLink.style.display = 'none';
+  }
+
+  // Fav button
+  const favBtn = document.getElementById('modal-fav-btn');
+  function updateFavBtn() {
+    const saved = isFav(story.id);
+    favBtn.textContent = saved ? t('★ Saved') : t('☆ Save to favorites');
+    favBtn.style.color = saved ? 'var(--gold)' : '';
+  }
+  updateFavBtn();
+  favBtn.onclick = () => { toggleStoreFav(story); updateFavBtn(); renderGrid(); };
+
+  overlay.style.display = '';
+  overlay.scrollTop = 0;
+}
+
+function closeModal() {
+  document.getElementById('story-modal-overlay').style.display = 'none';
+  currentModalStory = null;
+}
+
+document.getElementById('modal-close').onclick = closeModal;
+document.getElementById('story-modal-overlay').onclick = (e) => {
+  if (e.target === document.getElementById('story-modal-overlay')) closeModal();
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Search & filter ────────────────────────────────────────────────────────
+document.getElementById('story-search').addEventListener('input', e => {
+  currentQuery = e.target.value;
+  renderGrid();
+});
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderGrid();
+  };
+});
+
+// ── Load more ─────────────────────────────────────────────────────────────
+document.getElementById('load-more').onclick = async () => {
+  const btn = document.getElementById('load-more');
+  btn.innerHTML = `<span class="loading"><i></i><i></i><i></i></span> ${t('Loading…')}`;
+  btn.disabled = true;
+
+  const oldest = allStories[allStories.length - 1];
+  const endDate = oldest ? oldest.date : undefined;
+
+  // Calculate the day before the oldest so we don't refetch
+  let nextEnd;
+  if (endDate) {
+    const d = new Date(endDate);
+    d.setDate(d.getDate() - 1);
+    nextEnd = d.toISOString().slice(0, 10);
+  }
+
+  try {
+    const data = await AlTariqAPI.fetchStories(10, nextEnd);
+    const newStories = (data.stories || []).filter(s => !allStories.some(x => x.id === s.id));
+    allStories = [...allStories, ...newStories];
+    renderGrid();
+    btn.innerHTML = t('Load more archive signals');
+    btn.disabled = newStories.length === 0;
+    if (newStories.length === 0) btn.textContent = t('Archive synchronized');
+  } catch (err) {
+    btn.innerHTML = t('Retry load more');
+    btn.disabled = false;
+  }
+};
+
+// ── Initial load ──────────────────────────────────────────────────────────
+async function loadStories() {
+  try {
+    const data = await AlTariqAPI.fetchStories(10);
+    allStories = data.stories || [];
+    renderGrid();
+  } catch (err) {
+    document.getElementById('story-grid').innerHTML = `
+      <div class="card empty" style="grid-column:1/-1">
+        <h2 style="color:var(--danger)">${t('Could not load stories')}</h2>
+        <p class="muted">${err.message || t('Backend may be offline.')}</p>
+        <button class="btn btn-ghost" onclick="loadStories()" style="margin-top:12px">${t('Retry')}</button>
+      </div>`;
+  }
+}
+
+loadStories();
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Image Interpreter — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav">
+      <a href="index.html"><span>Home</span></a>
+      <a href="interpreter.html" class="active"><span>Image Interpreter</span></a>
+      <a href="chat.html"><span>AI Space Chat</span></a>
+      <a href="stories.html"><span>Cosmos Stories</span></a>
+      <a href="favorites.html"><span>Favorites</span></a>
+    </nav>
+    <div class="side-footer">MISSION STATUS<br><b>AI VISION ONLINE</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">VISION LAB / IMAGE INTERPRETER</span>
+      <span class="tag">AI VISION ONLINE</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">SIGNAL DECODER 02</div>
+        <h1>See deeper into space.</h1>
+        <p>Upload an astronomy image and let Al-Tariq turn distant light into a clear scientific reading.</p>
+      </div>
+    </section>
+
+    <section class="grid grid-2">
+
+      <!-- ── Upload panel ─────────────────────────────────────────────── -->
+      <div class="card">
+        <div id="drop-zone" class="upload">
+          <div id="upload-empty">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="26">
+                <path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 14v5h16v-5"/>
+              </svg>
+            </div>
+            <h2>Drop an image here</h2>
+            <p class="muted">or choose a file from your device</p>
+            <label class="btn btn-primary" for="image-file">Choose image</label>
+            <input id="image-file" class="file-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <div class="constraints">
+              <span class="tag">JPG / PNG / WEBP</span>
+              <span class="tag gold">MAX 5 MB</span>
+            </div>
+          </div>
+          <div id="image-preview-wrap" class="preview hidden">
+            <img id="image-preview" src="" alt="Selected image preview">
+            <div class="overlay"><span id="preview-filename" class="mono" style="font-size:11px"></span></div>
+            <button id="remove-image" class="remove" aria-label="Remove image">✕</button>
+          </div>
+        </div>
+        <div id="upload-status" class="hidden"></div>
+
+        <div class="field">
+          <label for="question-input">Ask a specific question (optional)</label>
+          <input id="question-input" type="text" placeholder="e.g. What type of nebula is this?" maxlength="400">
+        </div>
+
+        <div class="actions" style="margin-top:16px">
+          <button id="analyze" class="btn btn-primary" disabled>Analyze image</button>
+        </div>
+      </div>
+
+      <!-- ── Result panel ──────────────────────────────────────────────── -->
+      <div class="card">
+        <!-- Idle state -->
+        <div id="result-idle">
+          <span class="eyebrow">AWAITING SIGNAL</span>
+          <h2 style="margin-top:10px">Upload an image to begin.</h2>
+          <p class="muted" style="font-size:13px">The vision AI will return a detailed scientific interpretation, including key observations and a confidence rating.</p>
+        </div>
+
+        <!-- Loading state -->
+        <div id="result-loading" style="display:none">
+          <span class="eyebrow">INTERPRETING SIGNAL</span>
+          <h2 style="margin-top:10px;color:var(--muted)">Analysing…</h2>
+          <p class="muted" style="font-size:13px">Vision AI is reading the image. This usually takes 5–15 seconds.</p>
+          <div style="margin-top:20px;text-align:center"><span class="loading"><i></i><i></i><i></i></span></div>
+        </div>
+
+        <!-- Error state -->
+        <div id="result-error" style="display:none">
+          <span class="eyebrow" style="color:var(--danger)">SIGNAL ERROR</span>
+          <h2 id="result-error-msg" style="margin-top:10px;color:var(--danger);font-size:16px">Analysis failed.</h2>
+          <p class="muted" style="font-size:13px">Check that the backend is running and that OPENROUTER_API_KEY is set. Only JPG/PNG/WEBP up to 5 MB are accepted.</p>
+        </div>
+
+        <!-- Result content -->
+        <div id="analysis-result" class="result hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+            <span class="eyebrow">INTERPRETATION COMPLETE</span>
+            <span id="result-confidence-badge" class="tag"></span>
+          </div>
+          <h2 id="result-title" style="margin-bottom:10px"></h2>
+          <p id="result-summary" class="muted" style="font-size:13px;margin-bottom:16px"></p>
+
+          <div class="result-grid">
+            <div class="result-block">
+              <h3>Scientific Explanation</h3>
+              <p id="result-science"></p>
+            </div>
+            <div class="result-block" id="result-observations-block">
+              <h3>Observations</h3>
+              <ul id="result-observations" style="padding-left:16px;color:var(--muted);font-size:13px;margin:0"></ul>
+            </div>
+            <div class="result-block" id="result-qa-block" style="display:none">
+              <h3>Your Question</h3>
+              <p id="result-qa" style="color:var(--ink)"></p>
+            </div>
+            <div class="result-block" id="result-story-block" style="display:none">
+              <h3>Narrative</h3>
+              <p id="result-story" style="color:var(--muted);font-style:italic"></p>
+            </div>
+            <div class="result-block" id="result-non-space-block" style="display:none">
+              <h3>Note</h3>
+              <p style="color:var(--muted)">This image does not appear to be space-related. Try uploading an astronomy photograph.</p>
+            </div>
+          </div>
+
+          <!-- Chat with context button -->
+          <div class="actions" style="margin-top:20px">
+            <button id="chat-with-context" class="btn btn-ghost" style="font-size:13px">
+              Continue in AI Chat with this image →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Interpreter page ──────────────────────────────────────────────────────
+
+const input    = document.getElementById('image-file');
+const dropZone = document.getElementById('drop-zone');
+const preview  = document.getElementById('image-preview');
+const prevWrap = document.getElementById('image-preview-wrap');
+const empty    = document.getElementById('upload-empty');
+const analyze  = document.getElementById('analyze');
+const statusEl = document.getElementById('upload-status');
+
+let selectedFile = null;
+let lastResult   = null;
+
+// ── File validation ───────────────────────────────────────────────────────
+function validateFile(file) {
+  if (!file) return 'No file selected.';
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type))
+    return t('Unsupported type. Use JPG, PNG, or WEBP.');
+  if (file.size > 5 * 1024 * 1024)
+    return t('File exceeds 5 MB limit.');
+  return null;
+}
+
+function showFile(file) {
+  const err = validateFile(file);
+  if (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = err;
+    return;
+  }
+  selectedFile = file;
+  const url = URL.createObjectURL(file);
+  preview.src = url;
+  document.getElementById('preview-filename').textContent = file.name;
+  prevWrap.classList.remove('hidden');
+  empty.classList.add('hidden');
+  analyze.disabled = false;
+  statusEl.className = 'status success';
+  statusEl.textContent = `${file.name} ${t('ready for interpretation.')}`;
+}
+
+// ── File input / drag-drop ────────────────────────────────────────────────
+input.onchange = () => showFile(input.files[0]);
+
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault(); dropZone.classList.add('dragging');
+}));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault(); dropZone.classList.remove('dragging');
+}));
+dropZone.addEventListener('drop', e => showFile(e.dataTransfer.files[0]));
+
+document.getElementById('remove-image').onclick = () => {
+  input.value = '';
+  selectedFile = null;
+  prevWrap.classList.add('hidden');
+  empty.classList.remove('hidden');
+  analyze.disabled = true;
+  statusEl.className = 'hidden';
+  // Reset result panel
+  resetResult();
+};
+
+// ── Result panel helpers ──────────────────────────────────────────────────
+function resetResult() {
+  document.getElementById('result-idle').style.display = '';
+  document.getElementById('result-loading').style.display = 'none';
+  document.getElementById('result-error').style.display = 'none';
+  document.getElementById('analysis-result').classList.add('hidden');
+  lastResult = null;
+}
+
+function showLoading() {
+  document.getElementById('result-idle').style.display = 'none';
+  document.getElementById('result-loading').style.display = '';
+  document.getElementById('result-error').style.display = 'none';
+  document.getElementById('analysis-result').classList.add('hidden');
+}
+
+function showError(msg) {
+  document.getElementById('result-idle').style.display = 'none';
+  document.getElementById('result-loading').style.display = 'none';
+  document.getElementById('result-error').style.display = '';
+  document.getElementById('result-error-msg').textContent = msg;
+  document.getElementById('analysis-result').classList.add('hidden');
+}
+
+function showResult(r) {
+  document.getElementById('result-idle').style.display = 'none';
+  document.getElementById('result-loading').style.display = 'none';
+  document.getElementById('result-error').style.display = 'none';
+
+  document.getElementById('result-title').textContent   = r.title || 'Analysis complete';
+  document.getElementById('result-summary').textContent = r.summary || '';
+  document.getElementById('result-science').textContent = r.scientific_explanation || '';
+
+  // Confidence badge
+  const badge = document.getElementById('result-confidence-badge');
+  const confMap = { high: t('HIGH CONFIDENCE'), medium: t('MEDIUM CONFIDENCE'), low: t('LOW CONFIDENCE') };
+  badge.textContent = confMap[r.confidence] || r.confidence || '';
+  badge.className = 'tag' + (r.confidence === 'high' ? ' green' : r.confidence === 'low' ? '' : '');
+
+  // Observations list
+  const obsList = document.getElementById('result-observations');
+  obsList.innerHTML = (r.observations || []).map(o => `<li style="margin-bottom:4px">${o}</li>`).join('');
+  document.getElementById('result-observations-block').style.display = r.observations?.length ? '' : 'none';
+
+  // Q&A
+  if (r.question_answer) {
+    document.getElementById('result-qa').textContent = r.question_answer;
+    document.getElementById('result-qa-block').style.display = '';
+  } else {
+    document.getElementById('result-qa-block').style.display = 'none';
+  }
+
+  // Narrative
+  if (r.story) {
+    document.getElementById('result-story').textContent = r.story;
+    document.getElementById('result-story-block').style.display = '';
+  } else {
+    document.getElementById('result-story-block').style.display = 'none';
+  }
+
+  // Non-space notice
+  document.getElementById('result-non-space-block').style.display = r.is_space_related === false ? '' : 'none';
+
+  document.getElementById('analysis-result').classList.remove('hidden');
+  document.getElementById('analysis-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Analyze click ─────────────────────────────────────────────────────────
+analyze.onclick = async () => {
+  if (!selectedFile) return;
+  analyze.disabled = true;
+  analyze.innerHTML = `<span class="loading"><i></i><i></i><i></i></span> ${t('Analysing…')}`;
+  showLoading();
+
+  const question = document.getElementById('question-input').value.trim();
+
+  try {
+    const result = await AlTariqAPI.analyzeImage(selectedFile, question || undefined);
+    lastResult = result;
+    showResult(result);
+  } catch (err) {
+    showError(err.message || t('Analysis failed. Check that the backend is running.'));
+  } finally {
+    analyze.disabled = false;
+    analyze.innerHTML = t('Analyze image');
+  }
+};
+
+// ── Chat with context ──────────────────────────────────────────────────────
+document.getElementById('chat-with-context').onclick = () => {
+  if (lastResult) {
+    // Store the result so chat.html can pick it up
+    sessionStorage.setItem('al-tariq-image-context', JSON.stringify(lastResult));
+  }
+  window.location.href = 'chat.html';
+};
+</script>
+</body>
+</html>

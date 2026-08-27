@@ -8,4 +8,11 @@ server_err.log
 server_out.log
 frontend/node_modules/
 frontend/.next/
+node_modules/.env
+.env.local
 node_modules/
+.next/
+.pytest_cache/
+__pycache__/
+*.pyc
+New folder/

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Events Calendar — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Calendar RTL overrides ── */
+    html[dir="rtl"] .cal-grid { direction: rtl; }
+    html[dir="rtl"] .cal-nav  { flex-direction: row-reverse; }
+    .cal-event-meta{font:10px 'Space Mono',monospace;color:var(--cyan);margin-top:10px;letter-spacing:.05em}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav"></nav>
+    <div class="side-footer">MISSION STATUS<br><b>EVENTS INDEX ONLINE</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">ORBITAL EVENTS / CALENDAR</span>
+      <span class="tag gold" id="cal-month-tag">AUG 2026</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">LOOK UP, SOMETHING IS HAPPENING</div>
+        <h1 id="cal-headline">Meet the sky on time.</h1>
+        <p id="cal-subtitle">A visual calendar for meteor showers, conjunctions, eclipses, and the moments that make the night feel larger.</p>
+      </div>
+    </section>
+
+    <!-- Month nav -->
+    <div class="section-title" style="margin-top:10px">
+      <div>
+        <h2 id="cal-section-title">August mission calendar</h2>
+        <p id="cal-section-sub">Selected events for observation.</p>
+      </div>
+      <div class="actions cal-nav" style="margin:0">
+        <button class="btn" id="cal-prev">←</button>
+        <button class="btn" id="cal-today">Today</button>
+        <button class="btn" id="cal-next">→</button>
+      </div>
+    </div>
+
+    <!-- Events grid -->
+    <section class="grid grid-3 cal-grid" id="cal-grid">
+      <!-- Populated by JS -->
+    </section>
+
+    <!-- Upcoming banner -->
+    <div class="section-title" style="margin-top:40px">
+      <div>
+        <h2 id="cal-upcoming-title">Next major event</h2>
+        <p id="cal-upcoming-sub">Mark it on your calendar.</p>
+      </div>
+      <span class="tag green">UPCOMING</span>
+    </div>
+    <section class="card story-card" id="cal-next-event" style="padding:0">
+      <!-- Populated by JS -->
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Events Calendar page ──────────────────────────────────────────────────
+
+const CAL_STRINGS = {
+  en: {
+    headline:      'Meet the sky on time.',
+    subtitle:      'A visual calendar for meteor showers, conjunctions, eclipses, and the moments that make the night feel larger.',
+    sectionTitle:  'August mission calendar',
+    sectionSub:    'Selected events for observation.',
+    todayBtn:      'Today',
+    upcomingTitle: 'Next major event',
+    upcomingSub:   'Mark it on your calendar.',
+  },
+  ar: {
+    headline:      'قابل السماء في وقتها.',
+    subtitle:      'تقويم مرئي لأمطار الشهب والاقترانات والكسوفات واللحظات التي تجعل الليل يبدو أكبر.',
+    sectionTitle:  'تقويم مهمة أغسطس',
+    sectionSub:    'أحداث مختارة للرصد.',
+    todayBtn:      'اليوم',
+    upcomingTitle: 'الحدث الكبير القادم',
+    upcomingSub:   'ضعه في تقويمك.',
+  },
+};
+
+// Event data (bilingual)
+const EVENTS = [
+  {
+    date: 'AUG 12', dateAr: '12 أغسطس', tag: '', tagClass: '',
+    titleEn: 'Perseid meteor shower',  titleAr: 'أمطار شهب البرشاويات',
+    bodyEn:  'Peak before dawn. Look toward Perseus after midnight.',
+    bodyAr:  'الذروة قبيل الفجر. انظر نحو برشاوس بعد منتصف الليل.',
+    metaEn:  'PEAK · 80 METEORS / HR',  metaAr:  'الذروة · 80 شهاباً / ساعة',
+  },
+  {
+    date: 'AUG 19', dateAr: '19 أغسطس', tag: 'gold', tagClass: 'tag gold',
+    titleEn: 'Moon & Saturn conjunction', titleAr: 'اقتران القمر وزحل',
+    bodyEn:  'A close pairing visible in the southeastern sky.',
+    bodyAr:  'اقتران قريب مرئي في السماء الجنوبية الشرقية.',
+    metaEn:  'BEST VIEW · 21:40 UTC', metaAr: 'أفضل مشاهدة · 21:40 UTC',
+  },
+  {
+    date: 'AUG 28', dateAr: '28 أغسطس', tag: 'green', tagClass: 'tag green',
+    titleEn: 'New moon window',  titleAr: 'نافذة الهلال الجديد',
+    bodyEn:  'The darkest sky of the month for deep-sky observing.',
+    bodyAr:  'أظلم سماء في الشهر لرصد السماء العميقة.',
+    metaEn:  'DARK SKY · ALL NIGHT', metaAr: 'سماء مظلمة · طوال الليل',
+  },
+  {
+    date: 'SEP 7', dateAr: '7 سبتمبر', tag: '', tagClass: 'tag',
+    titleEn: 'Partial lunar eclipse',  titleAr: 'خسوف جزئي للقمر',
+    bodyEn:  'Earth\'s shadow crosses the lunar face — visible across three continents.',
+    bodyAr:  'يعبر ظل الأرض وجه القمر — مرئي عبر ثلاث قارات.',
+    metaEn:  'MAX · 18:44 UTC', metaAr: 'الأقصى · 18:44 UTC',
+  },
+  {
+    date: 'OCT 2', dateAr: '2 أكتوبر', tag: 'gold', tagClass: 'tag gold',
+    titleEn: 'Annular solar eclipse', titleAr: 'كسوف شمسي حلقي',
+    bodyEn:  'The Moon passes centrally across the Sun, leaving a ring of fire.',
+    bodyAr:  'يعبر القمر مركزياً أمام الشمس تاركاً خاتم نار.',
+    metaEn:  'RING OF FIRE · 2 MIN', metaAr: 'خاتم النار · دقيقتان',
+  },
+  {
+    date: 'DEC 13', dateAr: '13 ديسمبر', tag: '', tagClass: '',
+    titleEn: 'Geminid meteor shower', titleAr: 'أمطار شهب الجوزائيات',
+    bodyEn:  'The most consistent annual shower — up to 120 meteors per hour at peak.',
+    bodyAr:  'أكثر الأمطار اتساقاً سنوياً — حتى 120 شهاباً في الساعة عند الذروة.',
+    metaEn:  'PEAK · 120 METEORS / HR', metaAr: 'الذروة · 120 شهاباً / ساعة',
+  },
+];
+
+function renderCalGrid() {
+  const lang = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar' : 'en';
+  const s = CAL_STRINGS[lang];
+
+  // Apply strings to static elements
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('cal-headline',      s.headline);
+  set('cal-subtitle',      s.subtitle);
+  set('cal-section-title', s.sectionTitle);
+  set('cal-section-sub',   s.sectionSub);
+  set('cal-today',         s.todayBtn);
+  set('cal-upcoming-title', s.upcomingTitle);
+  set('cal-upcoming-sub',   s.upcomingSub);
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = EVENTS.map(ev => {
+    const dateLabel  = lang === 'ar' ? ev.dateAr  : ev.date;
+    const title      = lang === 'ar' ? ev.titleAr : ev.titleEn;
+    const body       = lang === 'ar' ? ev.bodyAr  : ev.bodyEn;
+    const meta       = lang === 'ar' ? ev.metaAr  : ev.metaEn;
+    const tagClass   = ev.tagClass || 'tag';
+    return `
+      <div class="card">
+        <span class="${tagClass}">${dateLabel}</span>
+        <h2 style="margin-top:12px">${title}</h2>
+        <p class="muted">${body}</p>
+        <div class="cal-event-meta">${meta}</div>
+      </div>`;
+  }).join('');
+
+  // Next-event banner (first upcoming)
+  const next = EVENTS[1]; // AUG 19 conjunction as featured
+  const nextTitle = lang === 'ar' ? next.titleAr : next.titleEn;
+  const nextBody  = lang === 'ar' ? next.bodyAr  : next.bodyEn;
+  const nextDate  = lang === 'ar' ? next.dateAr  : next.date;
+  const nextMeta  = lang === 'ar' ? next.metaAr  : next.metaEn;
+  document.getElementById('cal-next-event').innerHTML = `
+    <div class="story-image" style="min-height:180px;background:linear-gradient(135deg,rgba(123,0,255,.18),rgba(0,240,255,.08))"></div>
+    <div class="story-copy">
+      <div class="card-head">
+        <div>
+          <span class="tag gold">${nextDate}</span>
+          <h2 style="margin-top:10px">${nextTitle}</h2>
+        </div>
+      </div>
+      <p class="muted">${nextBody}</p>
+      <div class="cal-event-meta">${nextMeta}</div>
+    </div>`;
+}
+
+document.getElementById('cal-today').onclick = renderCalGrid;
+document.getElementById('cal-prev').onclick  = renderCalGrid;
+document.getElementById('cal-next').onclick  = renderCalGrid;
+
+// Initial render — after app.js boot so currentLang is available
+document.addEventListener('DOMContentLoaded', renderCalGrid);
+if (document.readyState !== 'loading') renderCalGrid();
+</script>
+</body>
+</html>

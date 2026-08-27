@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Exoplanet Catalog — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Exoplanets-specific: table RTL support ── */
+    html[dir="rtl"] table thead th,
+    html[dir="rtl"] table tbody td { text-align: right; }
+    html[dir="rtl"] .toolbar { flex-direction: row-reverse; }
+    html[dir="rtl"] .filters { flex-direction: row-reverse; }
+    .exo-badge{display:inline-block;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.05em}
+    .badge-habitable{background:rgba(100,245,178,.15);color:var(--green)}
+    .badge-hot{background:rgba(251,113,133,.12);color:var(--danger)}
+    .badge-unknown{background:rgba(148,163,184,.1);color:var(--muted)}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav"></nav>
+    <div class="side-footer">MISSION STATUS<br><b>CATALOG ONLINE</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">NASA ARCHIVE / EXOPLANETS</span>
+      <span class="tag">LIVE CATALOG UI</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">WORLDS BEYOND OUR SUN</div>
+        <h1>Map the unknown.</h1>
+        <p>Explore the growing catalog of confirmed worlds through the signals astronomers use to find them.</p>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input class="search" id="exo-search" placeholder="Search planet or host star…">
+      <div class="filters" id="exo-filters">
+        <button class="filter active" data-method="ALL">All methods</button>
+        <button class="filter" data-method="Transit">Transit</button>
+        <button class="filter" data-method="Radial velocity">Radial velocity</button>
+        <button class="filter" data-method="Imaging">Imaging</button>
+      </div>
+    </div>
+
+    <!-- Discovery table -->
+    <section class="card" style="padding:0;overflow:hidden">
+      <div class="card-head" style="padding:20px 24px 16px">
+        <div>
+          <span class="eyebrow">CONFIRMED WORLDS · 5,742</span>
+          <h2>Discovery stream</h2>
+        </div>
+        <span class="mono muted">SORT: RECENT</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="exo-table" style="width:100%;border-collapse:collapse;min-width:700px">
+          <thead>
+            <tr class="muted" style="font:11px 'Space Mono',monospace;text-transform:uppercase">
+              <th id="th-planet"   style="padding:10px 16px;border-bottom:1px solid var(--line);text-align:left">Planet</th>
+              <th id="th-method"   style="padding:10px 12px;border-bottom:1px solid var(--line);text-align:left">Method</th>
+              <th id="th-distance" style="padding:10px 12px;border-bottom:1px solid var(--line);text-align:left">Distance</th>
+              <th id="th-period"   style="padding:10px 12px;border-bottom:1px solid var(--line);text-align:left">Orbital period</th>
+              <th id="th-hab"      style="padding:10px 16px;border-bottom:1px solid var(--line);text-align:left">Habitability</th>
+            </tr>
+          </thead>
+          <tbody id="exo-tbody">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Stats row -->
+    <section class="grid grid-3" style="margin-top:24px">
+      <div class="card weather">
+        <div class="card-head">
+          <div>
+            <span class="eyebrow">TRANSIT METHOD</span>
+            <h2 id="stat-transit-count">3,124</h2>
+          </div>
+          <div class="icon-box">◉</div>
+        </div>
+        <p class="muted" id="stat-transit-desc">Detected by the dip in starlight as the planet crosses.</p>
+        <div class="meter"><i style="width:54%"></i></div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">RADIAL VELOCITY</span>
+        <h2 id="stat-rv-count">1,046</h2>
+        <p class="muted" id="stat-rv-desc">Stellar wobble reveals a hidden companion.</p>
+        <div class="meter"><i style="width:18%;background:var(--purple)"></i></div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">DIRECT IMAGING</span>
+        <h2 id="stat-img-count">74</h2>
+        <p class="muted" id="stat-img-desc">Captured directly in reflected or emitted light.</p>
+        <div class="meter"><i style="width:4%;background:var(--gold)"></i></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Exoplanet catalog page ────────────────────────────────────────────────
+
+const PLANETS = [
+  { name:'Kepler-452 b',  host:'Sun-like host star',     method:'Transit',         dist:'1,400 ly',  period:'384.8 days', hab:'potentially-habitable' },
+  { name:'51 Pegasi b',   host:'51 Pegasi (G-type)',     method:'Radial velocity',  dist:'50.9 ly',   period:'4.23 days',  hab:'hot-jupiter' },
+  { name:'TRAPPIST-1e',   host:'Ultra-cool red dwarf',   method:'Transit',         dist:'40.7 ly',   period:'6.1 days',   hab:'potentially-habitable' },
+  { name:'HD 209458 b',   host:'HD 209458 (G0V)',        method:'Transit',         dist:'159 ly',    period:'3.52 days',  hab:'hot-jupiter' },
+  { name:'HR 8799 b',     host:'HR 8799 (F-type)',       method:'Imaging',         dist:'130 ly',    period:'~460 years', hab:'unknown' },
+  { name:'Proxima Cen b', host:'Proxima Centauri (M5)',  method:'Radial velocity',  dist:'4.24 ly',   period:'11.2 days',  hab:'potentially-habitable' },
+  { name:'GJ 1132 b',     host:'Gliese 1132 (M-dwarf)', method:'Transit',         dist:'39 ly',     period:'1.63 days',  hab:'hot-jupiter' },
+  { name:'Beta Pic b',    host:'Beta Pictoris (A-type)', method:'Imaging',         dist:'63.4 ly',   period:'~20 years',  hab:'unknown' },
+];
+
+const HAB_LABELS_EN = {
+  'potentially-habitable': 'Potentially habitable',
+  'hot-jupiter': 'Hot Jupiter',
+  'unknown': 'Unknown',
+};
+const HAB_LABELS_AR = {
+  'potentially-habitable': 'ربما صالح للحياة',
+  'hot-jupiter': 'مشتري ساخن',
+  'unknown': 'غير معروف',
+};
+const HAB_CLASS = {
+  'potentially-habitable': 'badge-habitable',
+  'hot-jupiter': 'badge-hot',
+  'unknown': 'badge-unknown',
+};
+
+const METHOD_AR = {
+  'Transit':         'العبور',
+  'Radial velocity': 'السرعة القطرية',
+  'Imaging':         'التصوير المباشر',
+  'ALL':             'جميع الطرق',
+};
+
+function habLabel(h) {
+  if (typeof currentLang !== 'undefined' && currentLang === 'ar') return HAB_LABELS_AR[h] || h;
+  return HAB_LABELS_EN[h] || h;
+}
+function methodLabel(m) {
+  if (typeof currentLang !== 'undefined' && currentLang === 'ar') return METHOD_AR[m] || m;
+  return m;
+}
+
+let currentMethod = 'ALL';
+let currentQuery  = '';
+
+function renderTable() {
+  const tbody = document.getElementById('exo-tbody');
+  const q = currentQuery.toLowerCase();
+  const rows = PLANETS.filter(p => {
+    const matchMethod = currentMethod === 'ALL' || p.method === currentMethod;
+    const matchQ = !q || p.name.toLowerCase().includes(q) || p.host.toLowerCase().includes(q);
+    return matchMethod && matchQ;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--muted)">${t('No results found')}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(p => `
+    <tr style="transition:background .15s" onmouseover="this.style.background='rgba(0,240,255,.04)'" onmouseout="this.style.background=''">
+      <td style="padding:14px 16px;border-top:1px solid var(--line)">
+        <b>${p.name}</b><div class="muted" style="font-size:11px;margin-top:2px">${p.host}</div>
+      </td>
+      <td style="padding:14px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px">${methodLabel(p.method)}</td>
+      <td style="padding:14px 12px;border-top:1px solid var(--line);font:12px 'Space Mono',monospace;color:var(--cyan)">${p.dist}</td>
+      <td style="padding:14px 12px;border-top:1px solid var(--line);font:12px 'Space Mono',monospace;color:var(--muted)">${p.period}</td>
+      <td style="padding:14px 16px;border-top:1px solid var(--line)">
+        <span class="exo-badge ${HAB_CLASS[p.hab]}">${habLabel(p.hab)}</span>
+      </td>
+    </tr>`).join('');
+}
+
+// Search
+document.getElementById('exo-search').addEventListener('input', e => {
+  currentQuery = e.target.value;
+  renderTable();
+});
+
+// Filter buttons
+document.querySelectorAll('[data-method]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('[data-method]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMethod = btn.dataset.method;
+    renderTable();
+  };
+});
+
+// Initial render
+renderTable();
+</script>
+</body>
+</html>

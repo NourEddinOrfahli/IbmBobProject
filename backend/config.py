@@ -7,7 +7,10 @@ import os
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
 
-load_dotenv()
+# Resolve .env from the project root (one level above this file) so that the
+# server can be launched from any working directory (e.g. `cd backend; uvicorn
+# main:app`) and still pick up the root-level .env file.
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 
 @dataclass(frozen=True)
@@ -15,7 +18,12 @@ class NASAConfig:
     api_key: str = field(default_factory=lambda: os.getenv("NASA_API_KEY", "DEMO_KEY"))
     apod_url: str = "https://api.nasa.gov/planetary/apod"
     donki_url: str = "https://api.nasa.gov/DONKI"
-    request_timeout: float = 15.0
+    # 3 s strict timeout for APOD — keeps the UI snappy; fallback serves instantly on miss.
+    request_timeout: float = float(os.getenv("NASA_REQUEST_TIMEOUT", "3"))
+    # Separate timeout for DONKI — the DONKI endpoint is significantly slower than APOD
+    # (typically 4-6 s) so it needs its own timeout independent of the APOD timeout.
+    # Default: 12 s.  Set NASA_DONKI_TIMEOUT in .env to override.
+    donki_request_timeout: float = float(os.getenv("NASA_DONKI_TIMEOUT", "12"))
 
 
 @dataclass(frozen=True)
@@ -29,12 +37,12 @@ class OpenRouterConfig:
     model: str = field(
         default_factory=lambda: os.getenv(
             "OPENROUTER_MODEL",
-            # Default: a capable free model that reliably produces Arabic JSON.
-            # Override via OPENROUTER_MODEL env var — no source-code change needed.
-            # "openrouter/auto" / "openrouter/free" must NOT be used as defaults
-            # because OpenRouter may route them to safety-classifier or tiny models
-            # that cannot generate valid structured Arabic content.
-            "meta-llama/llama-3.3-70b-instruct:free",
+            # Default: nvidia/nemotron-3-ultra-550b-a55b:free
+            # Verified working on the OpenRouter free tier (live-tested 2025).
+            # DO NOT use openrouter/auto or openrouter/free — these route to
+            # safety-classifier models that return "User Safety: safe" instead
+            # of valid structured JSON responses.
+            "nvidia/nemotron-3-ultra-550b-a55b:free",
         )
     )
     request_timeout: float = 60.0
@@ -48,13 +56,35 @@ class OpenRouterConfig:
     min_completion_tokens: int = field(
         default_factory=lambda: int(os.getenv("OPENROUTER_MIN_COMPLETION_TOKENS", "100"))
     )
+    # Fallback model used when the primary model is rate-limited or unavailable.
+    # Set to None (or leave env var unset) to disable fallback behaviour.
+    # Must ALWAYS be a :free model — never set to a paid model.
+    fallback_model: str | None = field(
+        default_factory=lambda: os.getenv(
+            "OPENROUTER_FALLBACK_MODEL",
+            # poolside/laguna-s-2.1:free verified working on the free tier (2025).
+            "poolside/laguna-s-2.1:free",
+        ) or None
+    )
     # Vision model used for image analysis (multimodal).
-    # Defaults to a free vision-capable model on OpenRouter.
+    # Must support the OpenAI vision (image_url) format.
+    # Must ALWAYS be a :free model — never set to a paid model.
     vision_model: str = field(
         default_factory=lambda: os.getenv(
             "OPENROUTER_VISION_MODEL",
-            "nvidia/nemotron-nano-12b-v2-vl:free",
+            # nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free verified working
+            # for image_url vision with full structured JSON Arabic output (2025).
+            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
         )
+    )
+    # Fallback vision model — used when the primary vision model is rate-limited
+    # or returns a 502/503 transient error.  Must ALWAYS be a :free model.
+    vision_fallback_model: str | None = field(
+        default_factory=lambda: os.getenv(
+            "OPENROUTER_VISION_FALLBACK_MODEL",
+            # minimax/minimax-m3:free verified working as vision fallback (2025).
+            "minimax/minimax-m3:free",
+        ) or None
     )
 
 

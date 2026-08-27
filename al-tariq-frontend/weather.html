@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Space Weather — Al-Tariq</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><strong>Al-Tariq <span class="live"></span></strong><small>Space Interpreter</small></div>
+    </div>
+    <button class="mobile-menu" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="19"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav">
+      <a href="index.html"><span>Home</span></a>
+      <a href="interpreter.html"><span>Image Interpreter</span></a>
+      <a href="chat.html"><span>AI Space Chat</span></a>
+      <a href="stories.html"><span>Cosmos Stories</span></a>
+      <a href="favorites.html"><span>Favorites</span></a>
+    </nav>
+    <div class="side-footer">MISSION STATUS<br><b>SOLAR MONITOR ONLINE</b></div>
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="crumb">SOLAR MONITOR / SPACE WEATHER</span>
+      <span id="weather-status-tag" class="tag green">LOADING</span>
+    </div>
+
+    <section class="page-head">
+      <div>
+        <div class="eyebrow">THE SUN IS ALWAYS SPEAKING</div>
+        <h1>Read the solar wind.</h1>
+        <p>Translate flares, magnetic storms, and charged particles into a calm operational picture.</p>
+      </div>
+    </section>
+
+    <!-- Summary metrics — populated by JS -->
+    <section id="weather-metrics" class="grid grid-3">
+      <div class="card weather">
+        <div class="card-head"><div><span class="eyebrow">CME STATUS</span><h2 style="color:var(--muted)">Loading…</h2></div></div>
+        <div class="metric" style="color:var(--muted)">—</div>
+      </div>
+      <div class="card">
+        <span class="eyebrow">Kp-INDEX</span>
+        <div class="metric" style="color:var(--muted)">—</div>
+        <div class="meter"><i style="width:0%"></i></div>
+        <p class="muted">Loading…</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">EARTH IMPACT</span>
+        <div class="metric" style="color:var(--muted)">—</div>
+        <p class="muted">Loading…</p>
+      </div>
+    </section>
+
+    <!-- CME event list -->
+    <div class="section-title">
+      <div>
+        <h2>CME event timeline</h2>
+        <p>Coronal Mass Ejection events from NASA DONKI.</p>
+      </div>
+      <span class="mono muted" id="weather-sync-label">SYNCING…</span>
+    </div>
+
+    <section id="weather-events" class="card">
+      <div style="color:var(--muted);font-size:13px;padding:10px 0">Fetching space weather data…</div>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+// ── Weather page — reads space_weather from /api/space-weather ───────────
+// This endpoint calls NASA DONKI directly with no AI/OpenRouter dependency.
+
+async function loadWeather() {
+  let sw;
+  try {
+    sw = await AlTariqAPI.fetchSpaceWeather();
+  } catch (err) {
+    document.getElementById('weather-status-tag').textContent = t('OFFLINE');
+    document.getElementById('weather-status-tag').style.color = 'var(--danger)';
+    document.getElementById('weather-events').innerHTML =
+      `<p style="color:var(--danger);font-size:13px">${err.message || 'Backend unavailable.'}</p>`;
+    // Also update the metrics placeholders so they don't remain on "Loading…"
+    document.getElementById('weather-metrics').innerHTML = `
+      <div class="card weather" style="grid-column:1/-1">
+        <div class="card-head">
+          <div><span class="eyebrow">CME STATUS</span><h2 style="color:var(--danger)">${t('Error loading data')}</h2></div>
+        </div>
+        <p class="muted" style="font-size:13px">${err.message || t('Backend unavailable.')}</p>
+      </div>`;
+    return;
+  }
+
+  const now = new Date().toUTCString().slice(17, 22);
+  document.getElementById('weather-sync-label').textContent = `${t('LAST SYNC')} · ${now} UTC`;
+
+  // ── Update status tag ──────────────────────────────────────────────────
+  const statusTag = document.getElementById('weather-status-tag');
+  if (!sw || !sw.available) {
+    statusTag.textContent = t('STABLE');
+    statusTag.className = 'tag green';
+  } else {
+    const earthDir = sw.events.some(e => e.is_earth_directed);
+    statusTag.textContent = earthDir ? t('ACTIVE WATCH') : t('MONITORING');
+    statusTag.className = 'tag' + (earthDir ? '' : ' green');
+    if (earthDir) statusTag.style.color = 'var(--danger)';
+  }
+
+  // ── Kp and impact ─────────────────────────────────────────────────────
+  const kpValues = (sw?.events || []).filter(e => e.kp_index !== null).map(e => e.kp_index);
+  const maxKp = kpValues.length ? Math.max(...kpValues) : null;
+  const earthDir = (sw?.events || []).some(e => e.is_earth_directed);
+  const eventCount = sw?.event_count || 0;
+
+  const metrics = document.getElementById('weather-metrics');
+  const meterPct = maxKp !== null ? Math.min(100, (maxKp / 9) * 100) : 0;
+
+  metrics.innerHTML = `
+    <div class="card weather">
+      <div class="card-head">
+        <div><span class="eyebrow">CME STATUS</span><h2>${eventCount > 0 ? `${eventCount} active event${eventCount > 1 ? 's' : ''}` : t('No active events')}</h2></div>
+        <div class="icon-box">◉</div>
+      </div>
+      <div class="metric">${t(eventCount > 0 ? 'ACTIVE' : 'QUIET')}</div>
+      <div class="meter"><i style="width:${eventCount > 0 ? 55 : 10}%;background:linear-gradient(90deg,var(--cyan),${earthDir ? 'var(--danger)' : 'var(--purple)'})"></i></div>
+      <p class="muted">${t(eventCount > 0 ? 'CME events detected in monitoring window' : 'No significant CME detected')}</p>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Kp-INDEX</span>
+      <div class="metric">${maxKp !== null ? `${maxKp.toFixed(1)} / 9` : '— / 9'}</div>
+      <div class="meter"><i style="width:${meterPct}%"></i></div>
+      <p class="muted">${t(maxKp !== null ? (maxKp >= 5 ? 'Active geomagnetic conditions' : 'Quiet geomagnetic conditions') : 'No Kp data available')}</p>
+    </div>
+    <div class="card">
+      <span class="eyebrow">EARTH IMPACT</span>
+      <div class="metric" style="color:${earthDir ? 'var(--danger)' : 'var(--green)'}">${t(earthDir ? 'WATCH' : 'CLEAR')}</div>
+      <p class="muted">${t(earthDir ? 'One or more CMEs are Earth-directed' : 'No Earth-directed CMEs detected')}</p>
+    </div>`;
+
+  // ── CME Event list ─────────────────────────────────────────────────────
+  const eventsEl = document.getElementById('weather-events');
+
+  if (!sw || !sw.available || sw.event_count === 0) {
+    eventsEl.innerHTML = `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:32px;margin-bottom:12px;opacity:.4">◉</div>
+        <h2 style="font-size:18px">${t('Solar activity is quiet')}</h2>
+        <p class="muted" style="font-size:13px">${t('No CME events detected in the current monitoring window. Data is sourced from NASA DONKI.')}</p>
+      </div>`;
+    return;
+  }
+
+  eventsEl.innerHTML = `
+    <div class="eyebrow" style="margin-bottom:18px">${t('ACTIVE CME EVENTS')} (${sw.event_count})</div>
+    <div class="weather-list" id="cme-list"></div>`;
+
+  const listEl = document.getElementById('cme-list');
+  listEl.innerHTML = sw.events.map((evt, i) => {
+    const rows = [];
+    if (evt.begin_time)        rows.push(`<div class="weather-row"><span>${t('UTC Start')}</span><b>${evt.begin_time.replace('T', ' ').slice(0, 19)}</b></div>`);
+    if (evt.speed_kmps != null) rows.push(`<div class="weather-row"><span>${t('Speed')}</span><b>${Math.round(evt.speed_kmps)} km/s</b></div>`);
+    if (evt.source_location)   rows.push(`<div class="weather-row"><span>${t('Source')}</span><b>${evt.source_location}</b></div>`);
+    if (evt.kp_index != null)  rows.push(`<div class="weather-row"><span>${t('Kp index')}</span><b>${evt.kp_index.toFixed(1)}</b></div>`);
+    if (evt.estimated_arrival) rows.push(`<div class="weather-row"><span>${t('Est. arrival')}</span><b>${evt.estimated_arrival.replace('T', ' ').slice(0, 16)}</b></div>`);
+
+    const earthColor = evt.is_earth_directed ? 'var(--danger)' : 'var(--green)';
+    const earthLabel = evt.is_earth_directed === null ? t('Unknown') : t(evt.is_earth_directed ? 'Earth-directed' : 'Not Earth-directed');
+
+    return `
+      <div style="border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div>
+            <span class="eyebrow">CME EVENT ${i + 1}</span>
+            <h3 style="font-size:14px;margin:4px 0 0">${evt.event_type}</h3>
+          </div>
+          <span class="tag" style="color:${earthColor};background:rgba(0,0,0,.2)">${earthLabel}</span>
+        </div>
+        ${rows.join('')}
+        ${evt.note ? `<div style="margin-top:10px;padding:10px;background:rgba(0,240,255,.04);border-radius:6px;font-size:12px;color:var(--muted)">${evt.note}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+loadWeather();
+</script>
+</body>
+</html>

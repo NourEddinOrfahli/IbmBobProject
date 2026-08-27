@@ -1,0 +1,878 @@
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/README.md b/README.md[m
+[1mindex a20a0406..e75209db 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -2,45 +2,44 @@[m
+ [m
+ ### AI-Powered Arabic Space Interpreter[m
+ [m
+[31m-**Team:** 404Found[m
+[32m+[m[32m> **MVP / Prototype — actively evolving**[m
+ [m
+ ---[m
+ [m
+[31m-## One-Sentence Pitch[m
+[32m+[m[32m## Project Overview[m
+ [m
+[31m-Al-Tariq helps Arabic-speaking users understand astronomy and space content by combining NASA real-time data, AI-generated Arabic scientific explanations, conversational space AI, and vision-based image analysis into a single integrated platform.[m
+[32m+[m[32mAl-Tariq is an Arabic-focused, AI-powered space exploration and interpretation platform. It connects NASA's public APIs with a large language model gateway (OpenRouter) to make complex astronomy and space science content understandable and accessible to Arabic-speaking audiences.[m
+ [m
+[31m----[m
+[32m+[m[32mThe platform fetches real daily space data from NASA, generates structured Arabic scientific narratives, and provides a conversational AI interface for exploring space topics — all within an architecture that keeps API credentials exclusively server-side.[m
+ [m
+[31m-## Problem Statement[m
+[32m+[m[32m---[m
+ [m
+[31m-Astronomy content and astronomical images are difficult for non-specialists to access, especially when information is scattered across technical sources and almost always presented in English. This leaves billions of Arabic speakers with limited access to one of humanity's most exciting fields of knowledge.[m
+[32m+[m[32m## The Problem[m
+ [m
+[31m-Specifically:[m
+[32m+[m[32mAstronomy content is largely inaccessible to Arabic-speaking non-specialists:[m
+ [m
+[31m-- **Accessible Arabic explanations are rare.** Most NASA publications, APOD captions, and space-weather bulletins are in English and use specialised scientific vocabulary.[m
+[31m-- **Astronomical images lack contextual interpretation.** When someone encounters a space image, there is no easy way to ask "what is this?" in Arabic and receive a scientifically grounded answer.[m
+[31m-- **There is no conversational AI focused on Arabic space education.** General-purpose chatbots are not tuned for Arabic space literacy or for discussing specific images.[m
+[31m-- **Space data is scattered.** APOD, DONKI space-weather events, and archived stories live in separate places with no unified Arabic interface.[m
+[32m+[m[32m- **Almost all primary sources are in English.** NASA publications, APOD captions, and space-weather bulletins use specialised scientific vocabulary that is rarely translated into Arabic at a level appropriate for general audiences.[m
+[32m+[m[32m- **Space imagery lacks contextual explanation.** When someone encounters an image of a nebula, galaxy, or solar event, there is no easy way to ask *"what is this?"* in Arabic and receive a scientifically grounded answer.[m
+[32m+[m[32m- **No conversational AI tuned for Arabic space education exists.** General-purpose chatbots are not focused on Arabic space literacy or on discussing specific images.[m
+[32m+[m[32m- **Space data is scattered.** Daily astronomy pictures, space-weather events, and archived stories are hosted in separate places with no unified Arabic-language interface.[m
+ [m
+ ---[m
+ [m
+[31m-## Solution[m
+[32m+[m[32m## Our Solution[m
+ [m
+[31m-Al-Tariq addresses this problem by building a unified platform that connects NASA's public APIs, an OpenRouter-powered AI layer, and a Next.js Arabic frontend into one coherent experience.[m
+[32m+[m[32mAl-Tariq builds a unified platform that combines NASA's public APIs, an OpenRouter-powered AI layer, and two frontend implementations into one coherent experience.[m
+ [m
+ The implemented system provides:[m
+ [m
+[31m-- **Daily NASA APOD content** fetched live and rendered with full Arabic AI-generated interpretation.[m
+[31m-- **NASA DONKI space-weather data** (Coronal Mass Ejection events) integrated into the same bulletin to give real-time space-weather context alongside the daily story.[m
+[31m-- **AI-generated Arabic scientific stories** produced by a large language model with prompt engineering enforcing Arabic output, scientific accuracy, and structured JSON.[m
+[31m-- **Conversational space AI chat** — multi-turn Arabic chat about astronomy topics.[m
+[32m+[m[32m- **Daily NASA APOD content** — fetched live and accompanied by a full AI-generated Arabic scientific interpretation.[m
+[32m+[m[32m- **NASA DONKI space-weather data** — Coronal Mass Ejection events from NASA's real-time space-weather service, integrated into the daily bulletin.[m
+[32m+[m[32m- **AI-generated Arabic scientific stories** — produced by a large language model with prompt engineering enforcing Arabic output, scientific accuracy, and structured JSON validation.[m
+[32m+[m[32m- **Conversational space AI chat** — multi-turn Arabic conversation about astronomy topics, with optional image context.[m
+ - **Image upload and Vision AI analysis** — users upload any space image; the backend sends it to a multimodal vision model and returns a structured Arabic interpretation (title, summary, observations, scientific explanation, confidence level, and an answer to the user's specific question).[m
+[31m-- **NASA stories archive** — paginated browsing of past APOD entries with load-more functionality.[m
+[31m-- **Favorites** — client-side favorites backed by LocalStorage.[m
+[31m-- **A fully RTL Arabic interface** that is responsive and works on mobile.[m
+[32m+[m[32m- **NASA stories archive** — paginated browsing of past APOD entries.[m
+[32m+[m[32m- **A fully RTL Arabic interface** in the Next.js frontend, and a modern English LTR space-themed interface in the static al-tariq-frontend.[m
+ [m
+[31m-All AI calls are made server-side. No API keys are ever exposed to the browser.[m
+[32m+[m[32mAll AI and NASA API calls are made server-side. No API keys are ever exposed to the browser.[m
+ [m
+ ---[m
+ [m
+[36m@@ -58,52 +57,56 @@[m [mAll features listed below are implemented and present in the repository.[m
+ | Vision AI analysis | Multimodal model; returns structured Arabic result |[m
+ | Question about uploaded image | Optional Arabic question submitted with the image |[m
+ | Stories archive | Paginated APOD history (`GET /api/stories`) |[m
+[31m-| Story search | Client-side filtering within the stories page |[m
+[31m-| Load more stories | Loads additional entries going further back in time |[m
+ | Favorites | LocalStorage-based favorites across pages |[m
+[31m-| RTL Arabic interface | `<html lang="ar" dir="rtl">` throughout |[m
+[31m-| Responsive/mobile interface | Tailwind CSS responsive layout |[m
+[32m+[m[32m| RTL Arabic interface | `<html lang="ar" dir="rtl">` in the Next.js frontend |[m
+[32m+[m[32m| Daily bulletin scheduler | Optional APScheduler job for automated daily stories |[m
+[32m+[m[32m| Model fallback logic | Automatic retry on rate-limit / service-unavailable errors |[m
+ [m
+[31m-### Application Routes[m
+[32m+[m[32m### Application Routes (Next.js frontend)[m
+ [m
+ | Route | Page |[m
+ |---|---|[m
+ | `/` | Home dashboard (APOD story + space weather) |[m
+ | `/interpreter` | Image upload and Vision AI analysis |[m
+ | `/chat` | AI space chat |[m
+[31m-| `/stories` | NASA stories archive with search |[m
+[32m+[m[32m| `/stories` | NASA stories archive |[m
+ | `/favorites` | Saved favorites |[m
+ [m
+[31m-> The current interface is functional and responsive; visual polishing and design refinement may be performed separately by the team before the final presentation.[m
+[32m+[m[32m### Application Pages (al-tariq-frontend static)[m
+ [m
+[31m----[m
+[32m+[m[32m| Page | Description |[m
+[32m+[m[32m|---|---|[m
+[32m+[m[32m| `index.html` | Home / Morning Bulletin |[m
+[32m+[m[32m| `interpreter.html` | Vision AI image upload |[m
+[32m+[m[32m| `chat.html` | AI space conversation |[m
+[32m+[m[32m| `stories.html` | NASA/APOD story archive with search |[m
+[32m+[m[32m| `favorites.html` | Local favorites |[m
+[32m+[m[32m| `exoplanets.html` | Exoplanet catalog explorer |[m
+[32m+[m[32m| `weather.html` | Solar and geomagnetic monitor |[m
+[32m+[m[32m| `pulsar-lab.html` | Pulsar physics workbench |[m
+[32m+[m[32m| `calendar.html` | Astronomy events calendar |[m
+[32m+[m[32m| `observatory.html` | Observatory view |[m
+[32m+[m[32m| `mission-timeline.html` | Mission timeline |[m
+[32m+[m[32m| `settings.html` | Settings / API proxy placeholder |[m
+ [m
+[31m-## AI Approach & Architecture[m
+[32m+[m[32m---[m
+ [m
+[31m-### System Overview[m
+[32m+[m[32m## System Architecture[m
+ [m
+ ```[m
+ User[m
+  ↓[m
+[31m-Next.js Frontend (TypeScript / React)[m
+[31m- ↓[m
+[31m-FastAPI Backend (Python)[m
+[31m- ↓[m
+[31m- ┌──────────────────────┐[m
+[31m- │  NASA APIs           │[m
+[31m- │  APOD + DONKI        │[m
+[31m- └──────────────────────┘[m
+[31m- ↓[m
+[31m-AI / OpenRouter[m
+[32m+[m[32mFrontend (Next.js or al-tariq-frontend static)[m
+  ↓[m
+[31m- ┌──────────────┬──────────────┬──────────────┐[m
+[31m- │  Story       │  Chat        │  Vision      │[m
+[31m- │  Generation  │              │  Analysis    │[m
+[31m- └──────────────┴──────────────┴──────────────┘[m
+[32m+[m[32mFastAPI Backend (Python) — port 8000[m
+[32m+[m[32m ┌────────────────────────┬────────────────────────┐[m
+[32m+[m[32m │   NASA APIs            │   OpenRouter AI         │[m
+[32m+[m[32m │   APOD + DONKI         │   Text + Vision models  │[m
+[32m+[m[32m └────────────────────────┴────────────────────────┘[m
+  ↓[m
+[31m-Pydantic-validated result[m
+[32m+[m[32mPydantic-validated response envelope[m
+  ↓[m
+[31m-Next.js Frontend[m
+[32m+[m[32mFrontend[m
+ ```[m
+ [m
+ ### Text AI Path[m
+[36m@@ -111,9 +114,9 @@[m [mNext.js Frontend[m
+ 1. The frontend calls `GET /api/daily-news` or `POST /api/analyze`.[m
+ 2. `NASAClient` fetches the APOD data and, optionally, DONKI CME events.[m
+ 3. `prompts.py` builds a structured system + user prompt enforcing Arabic output and a specific JSON schema.[m
+[31m-4. `OpenRouterProvider.generate_structured_response()` calls the OpenRouter API with the prompt.[m
+[32m+[m[32m4. `OpenRouterProvider.generate_structured_response()` calls the OpenRouter API with the configured primary model; if the primary model returns a rate-limit or unavailability error, the configured fallback model is tried automatically.[m
+ 5. The raw response is parsed (including stripping markdown fences if present).[m
+[31m-6. `SpaceStory` (Pydantic model) validates the structure; a `model_validator` also checks that the language tag matches the actual script of the generated text.[m
+[32m+[m[32m6. `SpaceStory` (Pydantic model) validates the structure; a `model_validator` also corrects the `language` field if the AI returns English content while claiming `"language": "ar"`.[m
+ 7. The validated `SpaceStory` is serialised and returned to the frontend.[m
+ [m
+ ### Vision AI Path[m
+[36m@@ -127,68 +130,49 @@[m [mUser selects image[m
+  → base64 encoding (no temp file written)[m
+  → vision system prompt + user prompt constructed[m
+  → OpenRouterProvider.analyze_image() (multimodal request)[m
+[31m- → vision model: nvidia/nemotron-nano-12b-v2-vl:free[m
+[32m+[m[32m → Configured vision model (primary → fallback on error)[m
+  → raw JSON response parsed[m
+  → ImageAnalysisResult (Pydantic) validated[m
+  → Arabic structured result returned to frontend[m
+ ```[m
+ [m
+[31m-The vision model in use is `nvidia/nemotron-nano-12b-v2-vl:free`, which replaced the originally configured model after it was found to be unavailable during live verification.[m
+[31m-[m
+ ### NASA Data Path[m
+ [m
+ - **APOD** — `NASAClient.get_apod(apod_date?)` calls `https://api.nasa.gov/planetary/apod`. The response is normalised into a `NASAAPODData` Pydantic model. APOD is required; the pipeline returns an error if it is unavailable.[m
+[31m-- **DONKI** — `NASAClient.get_space_weather()` calls `https://api.nasa.gov/DONKI/CME`. DONKI is non-fatal; if it is unavailable, the story is still generated using APOD data only.[m
+[32m+[m[32m- **DONKI** — `NASAClient.get_donki_cme()` calls `https://api.nasa.gov/DONKI/CME`. DONKI is non-fatal; if it is unavailable the story is still generated using APOD data only.[m
+[32m+[m
+[32m+[m[32mBoth NASA calls are cached with a TTL to avoid redundant requests.[m
+ [m
+[31m-### Validation & Safety Layer[m
+[32m+[m[32m### Validation and Safety[m
+ [m
+ - All AI output is validated via Pydantic models (`SpaceStory`, `ImageAnalysisResult`).[m
+[31m-- A `model_validator` on `SpaceStory` corrects the `language` field if the AI returns English content while claiming `"language": "ar"`.[m
+[32m+[m[32m- A `model_validator` on `SpaceStory` corrects the `language` field if the AI returns English content.[m
+ - `field_validator` on `confidence` normalises values to `high | medium | low`.[m
+[31m-- Image MIME type is checked against an allowlist (`image/jpeg`, `image/png`, `image/webp`).[m
+[32m+[m[32m- Image MIME type is checked against an allowlist.[m
+ - Image size is enforced at 5 MB maximum.[m
+ - Chat messages are truncated server-side at 800 characters; history is capped at 20 turns.[m
+[31m-- API keys are never exposed to the frontend. The only frontend environment variable is `NEXT_PUBLIC_API_URL`.[m
+[31m-- All error responses use a structured `{"success": false, "error": {"code": "...", "message": "..."}}` envelope; stack traces are never surfaced.[m
+[32m+[m[32m- API keys are never exposed to the frontend.[m
+[32m+[m[32m- All error responses use a `{"success": false, "error": {"code": "...", "message": "..."}}` envelope; stack traces are never surfaced.[m
+[32m+[m[32m- CORS is currently open (`allow_origins=["*"]`) for development convenience; this should be tightened before production deployment.[m
+ [m
+ ---[m
+ [m
+[31m-## IBM Bob Usage[m
+[31m-[m
+[31m-IBM Bob was the **primary development tool** used to build Al-Tariq from the ground up.[m
+[31m-[m
+[31m-> Important distinction: IBM Bob is the development AI assistant used to write and verify this project. NASA APIs and OpenRouter are external third-party services integrated into the project — they are not part of IBM Bob.[m
+[32m+[m[32m## Technology Stack[m
+ [m
+[31m-Bob's verified contributions throughout the project:[m
+[32m+[m[32m### Backend[m
+ [m
+[31m-| Area | Bob's Role |[m
+[32m+[m[32m| Technology | Purpose |[m
+ |---|---|[m
+[31m-| **Architecture** | Designed the full-stack architecture: provider abstraction, pipeline structure, frontend component tree |[m
+[31m-| **Backend implementation** | Wrote all Python source files: `main.py`, `config.py`, `models.py`, `nasa_client.py`, `ai_provider.py`, `openrouter_provider.py`, `prompts.py`, `story_generator.py`, `chat_service.py`, `bulletin_service.py`, `bulletin_store.py`, `scheduler.py` |[m
+[31m-| **NASA API integration** | Implemented async HTTP client (`nasa_client.py`) for APOD and DONKI with timeout handling and structured model output |[m
+[31m-| **OpenRouter integration** | Implemented `OpenRouterProvider` with retry logic, JSON fence stripping, and minimum token validation |[m
+[31m-| **AI prompt engineering** | Designed Arabic-first prompts with structured JSON schema enforcement and scientific accuracy constraints |[m
+[31m-| **Vision AI integration** | Implemented `analyze_image` endpoint: MIME/size validation, base64 encoding, multimodal OpenRouter request, Pydantic validation of vision output |[m
+[31m-| **Frontend implementation** | Built all Next.js pages and React components in TypeScript with Tailwind CSS: dashboard, interpreter, chat, stories, favorites |[m
+[31m-| **UI/UX implementation** | Built RTL Arabic interface, responsive layout, component state handling |[m
+[31m-| **Testing — Backend** | Wrote all pytest test files covering models, prompts, NASA client, chat, image analysis, scheduler, bulletin service/store |[m
+[31m-| **Testing — Frontend** | Wrote all Jest/React Testing Library tests for components, hooks, and API client |[m
+[31m-| **Debugging** | Investigated and resolved failures across all layers including NASA API edge cases, AI model routing issues, vision model fallback |[m
+[31m-| **Integration verification** | Ran automated test suites across all layers; performed live HTTP verification of the Vision AI endpoint; verified frontend production build |[m
+[31m-| **Final validation** | Verified 308/308 backend tests pass, 121/121 frontend tests pass, TypeScript compiles clean, ESLint passes, and production build succeeds |[m
+[31m-| **Documentation** | Wrote this README |[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## Selected Challenge Theme[m
+[31m-[m
+[31m-> **TODO:** Insert the exact official challenge theme name before submission.[m
+[31m-[m
+[31m----[m
+[31m-[m
+[31m-## Technology Stack[m
+[32m+[m[32m| Python 3.11+ | Primary backend language |[m
+[32m+[m[32m| FastAPI | REST API framework with async support |[m
+[32m+[m[32m| Pydantic v2 | Data validation and serialisation |[m
+[32m+[m[32m| httpx | Async HTTP client (NASA API calls) |[m
+[32m+[m[32m| APScheduler | Optional daily bulletin scheduler |[m
+[32m+[m[32m| python-multipart | Multipart form handling for image upload |[m
+[32m+[m[32m| python-dotenv | Environment variable loading |[m
+[32m+[m[32m| uvicorn | ASGI server |[m
+ [m
+[31m-### Frontend[m
+[32m+[m[32m### Next.js Frontend (`frontend/`)[m
+ [m
+ | Technology | Purpose |[m
+ |---|---|[m
+[36m@@ -197,25 +181,21 @@[m [mBob's verified contributions throughout the project:[m
+ | TypeScript 5 | Static typing |[m
+ | Tailwind CSS 3 | Utility-first styling and responsive layout |[m
+ [m
+[31m-### Backend[m
+[32m+[m[32m### Al-Tariq Static Frontend (`al-tariq-frontend/`)[m
+ [m
+ | Technology | Purpose |[m
+ |---|---|[m
+[31m-| Python 3.11+ | Primary backend language |[m
+[31m-| FastAPI | REST API framework with async support |[m
+[31m-| Pydantic v2 | Data validation and serialisation |[m
+[31m-| httpx | Async HTTP client (NASA API calls) |[m
+[31m-| APScheduler | Optional daily bulletin scheduler |[m
+[31m-| python-multipart | Multipart form handling for image upload |[m
+[31m-| uvicorn | ASGI server |[m
+[32m+[m[32m| Vanilla HTML / CSS / JavaScript | Zero-dependency static pages |[m
+[32m+[m[32m| Node.js (zero-dependency server) | Local static file server (`server.js`) |[m
+ [m
+ ### AI[m
+ [m
+ | Technology | Purpose |[m
+ |---|---|[m
+ | OpenRouter | AI gateway providing access to multiple models |[m
+[31m-| `meta-llama/llama-3.3-70b-instruct:free` | Default text model for Arabic story generation |[m
+[31m-| `nvidia/nemotron-nano-12b-v2-vl:free` | Vision model for image analysis (verified live) |[m
+[32m+[m[32m| Configurable text model | Arabic story generation (default: `google/gemini-2.0-flash-exp:free` per `.env.example`) |[m
+[32m+[m[32m| Configurable vision model | Multimodal image analysis |[m
+[32m+[m[32m| Configurable fallback models | Automatic retry on primary model failure |[m
+ [m
+ ### Data[m
+ [m
+[36m@@ -234,166 +214,320 @@[m [mBob's verified contributions throughout the project:[m
+ [m
+ ---[m
+ [m
+[31m-## Project Structure[m
+[32m+[m[32m## Data and AI Integrations[m
+[32m+[m
+[32m+[m[32m| Integration | Type | Notes |[m
+[32m+[m[32m|---|---|---|[m
+[32m+[m[32m| NASA APOD | REST API (public) | Free; `DEMO_KEY` available for light testing |[m
+[32m+[m[32m| NASA DONKI | REST API (public) | CME space-weather events |[m
+[32m+[m[32m| OpenRouter | AI gateway | Requires an API key; free tier available |[m
+[32m+[m[32m| Primary text model | Configurable via `OPENROUTER_MODEL` | See `.env.example` for recommended defaults |[m
+[32m+[m[32m| Vision model | Configurable via `OPENROUTER_VISION_MODEL` | Must support OpenAI vision `image_url` format |[m
+[32m+[m[32m| Fallback models | Configurable via `OPENROUTER_FALLBACK_MODEL` / `OPENROUTER_VISION_FALLBACK_MODEL` | Activated automatically on rate-limit errors |[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## Repository Structure[m
+ [m
+ ```[m
+[31m-.                              # Project root[m
+[31m-├── backend/                   # Python FastAPI application[m
+[31m-│   ├── main.py                # FastAPI app, all endpoints, lifecycle[m
+[31m-│   ├── config.py              # Environment-based configuration (dataclasses)[m
+[31m-│   ├── models.py              # All Pydantic models (NASA, AI output, API envelopes)[m
+[31m-│   ├── nasa_client.py         # Async HTTP client for APOD and DONKI[m
+[31m-│   ├── ai_provider.py         # Abstract AIProvider interface[m
+[31m-│   ├── openrouter_provider.py # OpenRouter implementation of AIProvider[m
+[31m-│   ├── prompts.py             # All prompt engineering and construction[m
+[31m-│   ├── story_generator.py     # Pipeline orchestration (NASA → prompt → AI → validate)[m
+[31m-│   ├── chat_service.py        # Multi-turn chat logic[m
+[31m-│   ├── bulletin_service.py    # Daily bulletin generation service[m
+[31m-│   ├── bulletin_store.py      # JSON-file persistence for generated bulletins[m
+[31m-│   └── scheduler.py          # APScheduler-based daily bulletin scheduler[m
+[31m-├── tests/                     # Backend pytest test suite[m
+[31m-│   ├── conftest.py[m
+[31m-│   ├── test_models.py[m
+[31m-│   ├── test_prompts.py[m
+[31m-│   ├── test_stories.py[m
+[31m-│   ├── test_chat.py[m
+[31m-│   ├── test_analyze_image.py[m
+[31m-│   ├── test_space_weather.py[m
+[31m-│   ├── test_bulletin_service.py[m
+[31m-│   ├── test_bulletin_store.py[m
+[31m-│   └── test_scheduler.py[m
+[31m-├── frontend/                  # Next.js TypeScript application[m
+[31m-│   ├── app/                   # Next.js App Router pages[m
+[31m-│   │   ├── page.tsx           # / — Home dashboard[m
+[31m-│   │   ├── interpreter/       # /interpreter — Vision AI image analysis[m
+[31m-│   │   ├── chat/              # /chat — AI space chat[m
+[31m-│   │   ├── stories/           # /stories — NASA stories archive[m
+[31m-│   │   ├── favorites/         # /favorites — Saved favorites[m
+[31m-│   │   └── layout.tsx         # Root layout (RTL Arabic, SpaceNav)[m
+[31m-│   ├── components/            # React components[m
+[31m-│   │   ├── dashboard/         # SpaceDashboard, MorningBulletinHero, SpaceWeatherSection, etc.[m
+[31m-│   │   ├── chat/              # SpaceChat[m
+[31m-│   │   ├── image-analyzer/    # ImageAnalyzer[m
+[31m-│   │   ├── stories/           # StoriesSection[m
+[31m-│   │   ├── favorites/         # FavoritesSection[m
+[31m-│   │   ├── navigation/        # SpaceNav[m
+[31m-│   │   ├── states/            # BulletinEmpty, BulletinError, BulletinSkeleton[m
+[31m-│   │   └── ui/                # APODImage, CMEEventCard, ConfidenceBadge, KeyFact, etc.[m
+[31m-│   ├── hooks/                 # useDailyNews, useFavorites, useBulletinStatus[m
+[31m-│   ├── lib/                   # api.ts (typed HTTP client), types.ts[m
+[31m-│   └── __tests__/             # Jest test suite (components, hooks, lib)[m
+[31m-├── requirements.txt           # Python dependencies[m
+[31m-├── pytest.ini                 # pytest configuration[m
+[31m-├── .env.example               # Backend environment variable template[m
+[31m-└── README.md                  # This file[m
+[32m+[m[32m.                                  # Project root[m
+[32m+[m[32m├── backend/                       # Python FastAPI application[m
+[32m+[m[32m│   ├── main.py                    # FastAPI app — all endpoints, lifecycle[m
+[32m+[m[32m│   ├── config.py                  # Environment-based configuration (dataclasses)[m
+[32m+[m[32m│   ├── models.py                  # All Pydantic models (NASA, AI output, API envelopes)[m
+[32m+[m[32m│   ├── nasa_client.py             # Async HTTP client for APOD and DONKI (with TTL cache)[m
+[32m+[m[32m│   ├── ai_provider.py             # Abstract AIProvider interface[m
+[32m+[m[32m│   ├── openrouter_provider.py     # OpenRouter implementation (with fallback model logic)[m
+[32m+[m[32m│   ├── prompts.py                 # Prompt engineering and construction[m
+[32m+[m[32m│   ├── story_generator.py         # Pipeline orchestration (NASA → prompt → AI → validate)[m
+[32m+[m[32m│   ├── chat_service.py            # Multi-turn chat logic[m
+[32m+[m[32m│   ├── bulletin_service.py        # Daily bulletin generation service[m
+[32m+[m[32m│   ├── bulletin_store.py          # JSON-file persistence for generated bulletins[m
+[32m+[m[32m│   ├── scheduler.py               # APScheduler-based daily bulletin scheduler[m
+[32m+[m[32m│   └── test_prompt.py             # Development prompt scratch file[m
+[32m+[m[32m├── tests/                         # Backend pytest test suite[m
+[32m+[m[32m│   ├── conftest.py                # Path setup; adds backend/ to sys.path[m
+[32m+[m[32m│   ├── test_models.py             # Pydantic model validation, field coercion[m
+[32m+[m[32m│   ├── test_prompts.py            # Prompt construction, JSON fence stripping[m
+[32m+[m[32m│   ├── test_stories.py            # Stories archive endpoint[m
+[32m+[m[32m│   ├── test_chat.py               # Multi-turn chat endpoint[m
+[32m+[m[32m│   ├── test_analyze_image.py      # Image upload, MIME validation, vision AI path[m
+[32m+[m[32m│   ├── test_space_weather.py      # DONKI CME data handling[m
+[32m+[m[32m│   ├── test_bulletin_service.py   # Bulletin generation service[m
+[32m+[m[32m│   ├── test_bulletin_store.py     # JSON bulletin persistence[m
+[32m+[m[32m│   ├── test_scheduler.py          # Daily bulletin scheduler[m
+[32m+[m[32m│   ├── test_nasa.py               # NASAClient unit tests[m
+[32m+[m[32m│   ├── test_nasa_integration.py   # NASAClient TTL cache and integration tests[m
+[32m+[m[32m│   └── test_openrouter_fallback.py # OpenRouter fallback model logic tests[m
+[32m+[m[32m├── frontend/                      # Next.js TypeScript application (see below)[m
+[32m+[m[32m│   ├── app/                       # Next.js App Router pages[m
+[32m+[m[32m│   │   ├── page.tsx               # / — Home dashboard[m
+[32m+[m[32m│   │   ├── interpreter/           # /interpreter — Vision AI image analysis[m
+[32m+[m[32m│   │   ├── chat/                  # /chat — AI space chat[m
+[32m+[m[32m│   │   ├── stories/               # /stories — NASA stories archive[m
+[32m+[m[32m│   │   ├── favorites/             # /favorites — Saved favorites[m
+[32m+[m[32m│   │   └── layout.tsx             # Root layout (RTL Arabic, SpaceNav)[m
+[32m+[m[32m│   ├── components/                # React components (dashboard, chat, interpreter, etc.)[m
+[32m+[m[32m│   ├── hooks/                     # useDailyNews, useFavorites, useBulletinStatus[m
+[32m+[m[32m│   ├── lib/                       # api.ts (typed HTTP client), types.ts[m
+[32m+[m[32m│   └── __tests__/                 # Jest test suite (components, hooks, lib)[m
+[32m+[m[32m├── al-tariq-frontend/             # Static HTML/CSS/JS frontend (see below)[m
+[32m+[m[32m│   ├── index.html                 # Home / Morning Bulletin[m
+[32m+[m[32m│   ├── interpreter.html           # Vision AI image upload[m
+[32m+[m[32m│   ├── chat.html                  # AI space conversation[m
+[32m+[m[32m│   ├── stories.html               # NASA/APOD story archive[m
+[32m+[m[32m│   ├── favorites.html             # Local favorites[m
+[32m+[m[32m│   ├── exoplanets.html            # Exoplanet catalog explorer[m
+[32m+[m[32m│   ├── weather.html               # Solar and geomagnetic monitor[m
+[32m+[m[32m│   ├── pulsar-lab.html            # Pulsar physics workbench[m
+[32m+[m[32m│   ├── calendar.html              # Astronomy events calendar[m
+[32m+[m[32m│   ├── observatory.html           # Observatory view[m
+[32m+[m[32m│   ├── mission-timeline.html      # Mission timeline[m
+[32m+[m[32m│   ├── settings.html              # Settings / API proxy placeholder[m
+[32m+[m[32m│   ├── styles.css                 # Shared design system and responsive layout[m
+[32m+[m[32m│   ├── app.js                     # Starfield, i18n, navigation, shared interactions[m
+[32m+[m[32m│   ├── api.js                     # Centralised API client for the FastAPI backend[m
+[32m+[m[32m│   ├── config.js                  # Backend URL configuration (default: localhost:8000)[m
+[32m+[m[32m│   ├── server.js                  # Zero-dependency Node.js static file server[m
+[32m+[m[32m│   └── package.json               # `npm start` shortcut[m
+[32m+[m[32m├── OUR PROMET/                    # IBM Bob development artifacts (see below)[m
+[32m+[m[32m├── requirements.txt               # Python dependencies[m
+[32m+[m[32m├── pytest.ini                     # pytest configuration[m
+[32m+[m[32m├── .env.example                   # Backend environment variable template[m
+[32m+[m[32m├── validate_scheduler_runtime.py  # Runtime validation script for the bulletin scheduler[m
+[32m+[m[32m└── README.md                      # This file[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## Frontend Implementations[m
+[32m+[m
+[32m+[m[32mThis repository currently contains **two frontend implementations**. This is intentional and reflects the project's current MVP stage.[m
+[32m+[m
+[32m+[m[32m### 1. `frontend/` — Next.js TypeScript application[m
+[32m+[m
+[32m+[m[32mThe original frontend implementation built with Next.js 14, React, TypeScript, and Tailwind CSS. It provides a fully RTL Arabic-language interface covering all core features: the home dashboard, image interpreter, AI chat, stories archive, and favorites. It also includes a full Jest + React Testing Library test suite.[m
+[32m+[m
+[32m+[m[32m**Use this frontend if you want:** the complete Arabic RTL experience, TypeScript type safety, or to run the frontend test suite.[m
+[32m+[m
+[32m+[m[32m```bash[m
+[32m+[m[32m# From the frontend/ directory[m
+[32m+[m[32mnpm install[m
+[32m+[m[32mcp .env.local.example .env.local   # adjust NEXT_PUBLIC_API_URL if needed[m
+[32m+[m[32mnpm run dev[m
+[32m+[m[32m# → http://localhost:3000[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### 2. `al-tariq-frontend/` — Static HTML/CSS/JS application[m
+[32m+[m
+[32m+[m[32mA newer static frontend implementation designed specifically for the Al-Tariq experience. It is built with vanilla HTML, CSS, and JavaScript — zero build tooling required. It uses a modern English LTR space-themed design with a rich set of pages including exoplanets, weather, pulsar lab, calendar, and mission timeline — pages not yet present in the Next.js frontend.[m
+[32m+[m
+[32m+[m[32mThe static frontend communicates with the same FastAPI backend through `api.js`, which reads the backend URL from `config.js` (default: `http://localhost:8000`). At the current MVP stage, some pages use placeholder/demo data; integration with real backend endpoints is in progress.[m
+[32m+[m
+[32m+[m[32m**This is the intended direction for the project's future final production interface.**[m
+[32m+[m
+[32m+[m[32m**Use this frontend if you want:** the latest design direction, the extended page set, or a demonstration without Node.js build tooling.[m
+[32m+[m
+[32m+[m[32m```bash[m
+[32m+[m[32m# From the al-tariq-frontend/ directory[m
+[32m+[m[32mnpm start[m
+[32m+[m[32m# → http://localhost:3000[m
+ ```[m
+ [m
+[32m+[m[32m> Requires only Node.js 18 or newer (no npm install step — zero dependencies).[m
+[32m+[m
+[32m+[m[32m### Summary comparison[m
+[32m+[m
+[32m+[m[32m| Aspect | `frontend/` (Next.js) | `al-tariq-frontend/` (Static) |[m
+[32m+[m[32m|---|---|---|[m
+[32m+[m[32m| Technology | Next.js 14 / React / TypeScript | Vanilla HTML / CSS / JavaScript |[m
+[32m+[m[32m| Language / direction | Arabic RTL | English LTR |[m
+[32m+[m[32m| Backend integration | Fully integrated | Core pages integrated; some pages use demo data |[m
+[32m+[m[32m| Test suite | Jest + RTL (see Testing) | None |[m
+[32m+[m[32m| Build required | Yes (`npm install`) | No (`npm start` only) |[m
+[32m+[m[32m| Future direction | Maintained | **Primary direction** |[m
+[32m+[m
+ ---[m
+ [m
+[31m-## How to Run Locally[m
+[32m+[m[32m## How to Run the Project[m
+ [m
+ ### Prerequisites[m
+ [m
+ - Python 3.11 or newer[m
+ - Node.js 18 or newer[m
+[31m-- A NASA API key — free from [api.nasa.gov](https://api.nasa.gov) (`DEMO_KEY` works for light testing)[m
+[32m+[m[32m- A NASA API key — free from [api.nasa.gov](https://api.nasa.gov) (`DEMO_KEY` works for light testing with strict rate limits)[m
+ - An OpenRouter API key — free tier at [openrouter.ai](https://openrouter.ai)[m
+ [m
+[31m-### Backend[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m### Step 1 — Backend[m
+ [m
+ ```bash[m
+ # From the project root[m
+ [m
+[31m-# 1. Create and activate a virtual environment[m
+[32m+[m[32m# 1. Create a virtual environment[m
+ python -m venv .venv[m
+ [m
+[31m-# Windows[m
+[32m+[m[32m# 2. Activate it[m
+[32m+[m[32m#    Windows:[m
+ .venv\Scripts\activate[m
+[31m-# macOS/Linux[m
+[32m+[m[32m#    macOS / Linux:[m
+ source .venv/bin/activate[m
+ [m
+[31m-# 2. Install dependencies[m
+[31m-pip install -r requirements.txt[m
+[32m+[m[32m# 3. Install dependencies[m
+[32m+[m[32mpython -m pip install -r requirements.txt[m
+ [m
+[31m-# 3. Copy the environment template and fill in your keys[m
+[31m-copy .env.example .env        # Windows[m
+[31m-# cp .env.example .env        # macOS/Linux[m
+[31m-# Edit .env — set NASA_API_KEY and OPENROUTER_API_KEY[m
+[32m+[m[32m# 4. Copy the environment template and fill in your keys[m
+[32m+[m[32m#    Windows:[m
+[32m+[m[32mcopy .env.example .env[m
+[32m+[m[32m#    macOS / Linux:[m
+[32m+[m[32mcp .env.example .env[m
+[32m+[m[32m# Open .env and set at minimum: NASA_API_KEY and OPENROUTER_API_KEY[m
+ [m
+[31m-# 4. Start the backend server[m
+[32m+[m[32m# 5. Start the backend server (run from the project root)[m
+ cd backend[m
+[31m-uvicorn main:app --reload[m
+[32m+[m[32mpython -m uvicorn main:app --reload[m
+ ```[m
+ [m
+[31m-The backend will be available at `http://localhost:8000`.  [m
+[32m+[m[32mThe backend will be available at `http://localhost:8000`.[m
+ Interactive API docs (Swagger UI): `http://localhost:8000/docs`[m
+ [m
+[31m-### Frontend[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m### Step 2A — Al-Tariq Static Frontend (recommended for demonstration)[m
+ [m
+ ```bash[m
+[31m-# From the frontend/ directory[m
+[32m+[m[32m# From the al-tariq-frontend/ directory[m
+[32m+[m[32mcd al-tariq-frontend[m
+[32m+[m[32mnpm start[m
+[32m+[m[32m# → http://localhost:3000[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mNo `npm install` step is needed — this frontend has zero npm dependencies.[m
+ [m
+[31m-# 1. Install dependencies[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m### Step 2B — Next.js Frontend (full Arabic RTL experience)[m
+[32m+[m
+[32m+[m[32m```bash[m
+[32m+[m[32m# From the frontend/ directory[m
+[32m+[m[32mcd frontend[m
+ npm install[m
+ [m
+[31m-# 2. Copy the environment template[m
+[31m-copy .env.local.example .env.local     # Windows[m
+[31m-# cp .env.local.example .env.local    # macOS/Linux[m
+[31m-# Edit .env.local if your backend runs on a different port[m
+[32m+[m[32m# Optional: adjust the backend URL if it differs from http://localhost:8000[m
+[32m+[m[32m#    Windows:[m
+[32m+[m[32mcopy .env.local.example .env.local[m
+[32m+[m[32m#    macOS / Linux:[m
+[32m+[m[32mcp .env.local.example .env.local[m
+ [m
+[31m-# 3. Start the development server[m
+ npm run dev[m
+[32m+[m[32m# → http://localhost:3000[m
+ ```[m
+ [m
+[31m-The frontend will be available at `http://localhost:3000`.[m
+[32m+[m[32m> Run only one frontend at a time on port 3000.[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## Backend API Overview[m
+[32m+[m
+[32m+[m[32mAll endpoints accept and return JSON. Successful responses use the envelope `{"success": true, "data": {...}}`. Error responses use `{"success": false, "error": {"code": "...", "message": "..."}}`.[m
+[32m+[m
+[32m+[m[32m| Method | Endpoint | Description |[m
+[32m+[m[32m|---|---|---|[m
+[32m+[m[32m| `GET` | `/health` | Liveness probe — returns `{"status": "ok"}` |[m
+[32m+[m[32m| `GET` | `/api/daily-news` | Fetch today's NASA APOD and generate an AI Arabic story |[m
+[32m+[m[32m| `GET` | `/api/daily-news/status` | Scheduler status and latest bulletin metadata |[m
+[32m+[m[32m| `POST` | `/api/analyze` | Analyse a specific APOD date or free-text space context |[m
+[32m+[m[32m| `POST` | `/api/analyze-image` | Upload a space image; returns structured Arabic vision AI analysis |[m
+[32m+[m[32m| `POST` | `/api/chat` | Multi-turn Arabic space AI conversation |[m
+[32m+[m[32m| `GET` | `/api/space-weather` | Real-time NASA DONKI CME space-weather data (no AI dependency) |[m
+[32m+[m[32m| `GET` | `/api/stories` | Paginated APOD story archive (`?count=5&end_date=YYYY-MM-DD`) |[m
+[32m+[m
+[32m+[m[32m### `POST /api/analyze-image`[m
+[32m+[m
+[32m+[m[32mAccepts `multipart/form-data`:[m
+[32m+[m[32m- `image` — JPEG, PNG, or WEBP file, max 5 MB (required)[m
+[32m+[m[32m- `question` — optional Arabic question about the image (max 400 characters)[m
+ [m
+[31m-> **Security note:** API keys (`NASA_API_KEY`, `OPENROUTER_API_KEY`) must be stored in the backend `.env` file only. Never add them to `frontend/.env.local`. The only frontend variable is `NEXT_PUBLIC_API_URL`, which points to the backend server — it contains no secrets.[m
+[32m+[m[32mReturns a structured Arabic analysis: title, summary, key observations, scientific explanation, confidence level, and an answer to the user's question (if provided). The image is never stored permanently.[m
+[32m+[m
+[32m+[m[32m### `POST /api/chat`[m
+[32m+[m
+[32m+[m[32mAccepts a JSON body with:[m
+[32m+[m[32m- `messages` — array of `{role, content}` objects (max 20 turns; user messages truncated at 800 characters)[m
+[32m+[m[32m- `image_context` — optional object from a previous `/api/analyze-image` call[m
+ [m
+ ---[m
+ [m
+ ## Environment Variables[m
+ [m
+[31m-### Backend (`/.env`)[m
+[32m+[m[32mCreate `.env` in the **project root** by copying `.env.example`. The backend reads this file automatically.[m
+[32m+[m
+[32m+[m[32m### Core (backend, `/.env`)[m
+ [m
+ | Variable | Required | Default | Description |[m
+ |---|---|---|---|[m
+ | `NASA_API_KEY` | Recommended | `DEMO_KEY` | NASA public API key |[m
+ | `OPENROUTER_API_KEY` | **Yes** (AI endpoints) | _(empty)_ | OpenRouter API key |[m
+[31m-| `OPENROUTER_MODEL` | No | `meta-llama/llama-3.3-70b-instruct:free` | Text model slug |[m
+[31m-| `OPENROUTER_VISION_MODEL` | No | `nvidia/nemotron-nano-12b-v2-vl:free` | Vision model slug |[m
+[31m-| `OPENROUTER_BASE_URL` | No | `https://openrouter.ai/api/v1` | Override API base URL |[m
+[32m+[m[32m| `OPENROUTER_MODEL` | No | `google/gemini-2.0-flash-exp:free` | Primary text model slug |[m
+[32m+[m[32m| `OPENROUTER_FALLBACK_MODEL` | No | `meta-llama/llama-3.3-70b-instruct:free` | Fallback text model on rate-limit / 503 |[m
+[32m+[m[32m| `OPENROUTER_VISION_MODEL` | No | `google/gemini-2.0-flash-exp:free` | Vision model slug |[m
+[32m+[m[32m| `OPENROUTER_VISION_FALLBACK_MODEL` | No | _(env-defined)_ | Fallback vision model |[m
+[32m+[m[32m| `OPENROUTER_BASE_URL` | No | `https://openrouter.ai/api/v1` | Override AI API base URL |[m
+ | `OPENROUTER_MAX_TOKENS` | No | `2000` | Maximum output tokens |[m
+ | `OPENROUTER_MIN_COMPLETION_TOKENS` | No | `100` | Minimum tokens to accept as a valid response |[m
+[31m-| `DAILY_BULLETIN_ENABLED` | No | `false` | Enable automatic daily story scheduler |[m
+[32m+[m
+[32m+[m[32m### NASA tuning[m
+[32m+[m
+[32m+[m[32m| Variable | Required | Default | Description |[m
+[32m+[m[32m|---|---|---|---|[m
+[32m+[m[32m| `NASA_REQUEST_TIMEOUT` | No | `3` | APOD request timeout in seconds |[m
+[32m+[m[32m| `NASA_DONKI_TIMEOUT` | No | `12` | DONKI request timeout in seconds |[m
+[32m+[m[32m| `NASA_APOD_FALLBACK` | No | `true` | Return placeholder story on APOD timeout instead of hanging |[m
+[32m+[m
+[32m+[m[32m### Daily bulletin scheduler[m
+[32m+[m
+[32m+[m[32m| Variable | Required | Default | Description |[m
+[32m+[m[32m|---|---|---|---|[m
+[32m+[m[32m| `DAILY_BULLETIN_ENABLED` | No | `false` | Enable automatic daily bulletin generation |[m
+ | `DAILY_BULLETIN_HOUR` | No | `7` | Scheduler hour (0–23) |[m
+ | `DAILY_BULLETIN_MINUTE` | No | `0` | Scheduler minute (0–59) |[m
+[31m-| `DAILY_BULLETIN_TIMEZONE` | No | `UTC` | IANA timezone for scheduler |[m
+[31m-| `BULLETIN_STORE_PATH` | No | `bulletin_store.json` | Path for bulletin JSON cache |[m
+[32m+[m[32m| `DAILY_BULLETIN_TIMEZONE` | No | `UTC` | IANA timezone for the scheduler |[m
+[32m+[m[32m| `BULLETIN_STORE_PATH` | No | `bulletin_store.json` | Path for the bulletin JSON cache |[m
+[32m+[m
+[32m+[m[32m### Other[m
+[32m+[m
+[32m+[m[32m| Variable | Required | Default | Description |[m
+[32m+[m[32m|---|---|---|---|[m
+ | `LOG_LEVEL` | No | `INFO` | Logging verbosity |[m
+ | `DEBUG` | No | `false` | Enable debug mode |[m
+ [m
+[31m-### Frontend (`/frontend/.env.local`)[m
+[32m+[m[32m### Next.js frontend (`/frontend/.env.local`)[m
+ [m
+ | Variable | Required | Default | Description |[m
+ |---|---|---|---|[m
+ | `NEXT_PUBLIC_API_URL` | No | `http://localhost:8000` | Backend server base URL |[m
+ [m
+[31m-> **Never** expose `NASA_API_KEY` or `OPENROUTER_API_KEY` via `NEXT_PUBLIC_*` variables. All AI and NASA calls are made by the backend.[m
+[32m+[m[32m> **Security note:** `NASA_API_KEY` and `OPENROUTER_API_KEY` must be stored in the backend `.env` file only. Never add them to any frontend environment file. All AI and NASA calls are made exclusively by the Python backend.[m
+ [m
+ ---[m
+ [m
+[31m-## Testing & Verification[m
+[32m+[m[32m## Testing and Validation[m
+ [m
+[31m-### Backend[m
+[32m+[m[32m### Backend tests[m
+ [m
+ ```bash[m
+[31m-# From the project root (with .venv activated)[m
+[32m+[m[32m# From the project root, with the virtual environment activated[m
+ python -m pytest tests/ -v[m
+ ```[m
+ [m
+[31m-**Result: 308/308 tests passed**[m
+[32m+[m[32mLive tests (those that make real network calls to NASA or OpenRouter) are excluded by default. To run them explicitly:[m
+[32m+[m
+[32m+[m[32m```bash[m
+[32m+[m[32mpython -m pytest tests/ -m live -v[m
+[32m+[m[32m```[m
+ [m
+[31m-Test files:[m
+[32m+[m[32mTest files cover:[m
+ [m
+ | File | Coverage area |[m
+ |---|---|[m
+[36m@@ -406,117 +540,120 @@[m [mTest files:[m
+ | `test_bulletin_service.py` | Bulletin generation service |[m
+ | `test_bulletin_store.py` | JSON bulletin persistence |[m
+ | `test_scheduler.py` | Daily bulletin scheduler |[m
+[32m+[m[32m| `test_nasa.py` | NASAClient unit tests (mock network) |[m
+[32m+[m[32m| `test_nasa_integration.py` | NASAClient TTL cache and HTTP integration tests |[m
+[32m+[m[32m| `test_openrouter_fallback.py` | OpenRouter fallback model logic |[m
+ [m
+[31m-### Frontend[m
+[32m+[m[32m### Next.js frontend tests[m
+ [m
+ ```bash[m
+ # From the frontend/ directory[m
+ npm test[m
+ ```[m
+ [m
+[31m-**Result: 121/121 tests passed**[m
+[31m-[m
+ ```bash[m
+ # TypeScript type check[m
+ npm run type-check[m
+ ```[m
+ [m
+[31m-**Result: PASS**[m
+[31m-[m
+ ```bash[m
+ # ESLint[m
+ npm run lint[m
+ ```[m
+ [m
+[31m-**Result: PASS**[m
+[32m+[m[32m### Scheduler runtime validation[m
+[32m+[m
+[32m+[m[32mA standalone script for end-to-end validation of the daily bulletin scheduler is available at the project root:[m
+ [m
+ ```bash[m
+[31m-# Production build[m
+[31m-npm run build[m
+[32m+[m[32m# From the backend/ directory (with virtual environment activated)[m
+[32m+[m[32mpython ..\validate_scheduler_runtime.py   # Windows[m
+[32m+[m[32mpython ../validate_scheduler_runtime.py   # macOS / Linux[m
+ ```[m
+ [m
+[31m-**Result: PASS**[m
+[31m-[m
+[31m-### Live Vision AI Verification[m
+[31m-[m
+[31m-| Item | Result |[m
+[31m-|---|---|[m
+[31m-| Vision AI endpoint (`POST /api/analyze-image`) | ✅ VERIFIED |[m
+[31m-| Vision model | `nvidia/nemotron-nano-12b-v2-vl:free` |[m
+[31m-| Note | The originally configured vision model was found to be unavailable during live verification and was replaced with `nvidia/nemotron-nano-12b-v2-vl:free`, which was verified live. |[m
+[32m+[m[32mThis script verifies scheduler startup, bulletin generation, `BulletinStore` persistence, idempotency (duplicate prevention), and that no API keys are present in status responses.[m
+ [m
+ ---[m
+ [m
+ ## Security[m
+ [m
+[31m-The following security measures are implemented and present in the codebase:[m
+[31m-[m
+[31m-- **API keys are server-side only.** `NASA_API_KEY` and `OPENROUTER_API_KEY` are read by the Python backend at startup. They are never sent to or accessible from the browser.[m
+[31m-- **No secrets in frontend source or build.** The only `NEXT_PUBLIC_*` variable is `NEXT_PUBLIC_API_URL`, which contains only the backend server address — no credentials.[m
+[31m-- **Uploaded image MIME validation.** Only `image/jpeg`, `image/png`, and `image/webp` are accepted. Unsupported types return a `422` error before any processing.[m
+[31m-- **Uploaded image size limit.** Files larger than 5 MB are rejected before encoding or transmission to the AI provider.[m
+[31m-- **Images are not stored permanently.** Uploaded bytes are read into memory, base64-encoded, sent to the vision model, and then discarded. No file is written to disk.[m
+[31m-- **Structured error responses.** All errors use a `{"success": false, "error": {"code": "...", "message": "..."}}` envelope. Stack traces are never exposed to the client.[m
+[31m-- **Chat input truncation.** User messages are truncated server-side at 800 characters and conversation history is capped at 20 turns.[m
+[31m-- **CORS configuration.** The FastAPI backend configures `CORSMiddleware` with `allow_origins=["*"]` and `allow_methods=["GET", "POST"]`. This is currently open for development convenience; it should be tightened to the specific frontend origin before production deployment.[m
+[32m+[m[32m- **API keys are server-side only.** `NASA_API_KEY` and `OPENROUTER_API_KEY` are read by the Python backend at startup and never transmitted to or accessible from the browser.[m
+[32m+[m[32m- **Uploaded images are not stored permanently.** Bytes are read into memory, base64-encoded, sent to the vision model, and then discarded. No file is written to disk.[m
+[32m+[m[32m- **Structured error responses.** All errors use a consistent JSON envelope. Stack traces are never surfaced to clients.[m
+[32m+[m[32m- **Chat input limits.** User messages are truncated server-side at 800 characters; conversation history is capped at 20 turns.[m
+[32m+[m[32m- **Image validation.** Only `image/jpeg`, `image/png`, and `image/webp` are accepted, with a 5 MB size limit enforced before any processing.[m
+[32m+[m[32m- **CORS.** Currently open (`allow_origins=["*"]`) for development. This must be restricted to the specific frontend origin before any production deployment.[m
+ [m
+ ---[m
+ [m
+[31m-## Current Status[m
+[32m+[m[32m## Development Process and IBM Bob[m
+ [m
+[31m-Al-Tariq is functionally implemented and has passed the automated and live verification described in this README:[m
+[32m+[m[32mAl-Tariq was developed using **IBM Bob** as the primary AI-assisted development environment throughout the project lifecycle.[m
+ [m
+[31m-- ✅ 308/308 backend tests passing[m
+[31m-- ✅ 121/121 frontend tests passing[m
+[31m-- ✅ TypeScript clean[m
+[31m-- ✅ ESLint clean[m
+[31m-- ✅ Production build passing[m
+[31m-- ✅ Vision AI live-verified[m
+[32m+[m[32mThe repository contains a folder named `OUR PROMET/` which holds development artifacts documenting significant parts of this workflow — including task descriptions, architecture analyses, automation reports, and completion summaries generated during development sessions with IBM Bob. This folder is intentionally preserved in the repository as a transparent record of the AI-assisted development process used for this challenge submission.[m
+ [m
+[31m-> The current interface is functional and responsive; visual polishing and design refinement may be performed separately by the team before the final presentation.[m
+[32m+[m[32mThe `OUR PROMET/` folder is a development artifact and is not required to run the application.[m
+ [m
+ ---[m
+ [m
+[31m-## Demo[m
+[31m-[m
+[31m-### Demo Video[m
+[32m+[m[32m## MVP Status and Future Direction[m
+ [m
+[31m-> TODO — insert public demo video URL[m
+[32m+[m[32mAl-Tariq is currently an **MVP / prototype**. The core backend and both frontend implementations are functional, but the project is actively evolving.[m
+ [m
+[31m-### GitHub Repository[m
+[32m+[m[32m### What is fully implemented[m
+ [m
+[31m-> TODO — insert public GitHub repository URL[m
+[32m+[m[32m- FastAPI backend with all documented endpoints[m
+[32m+[m[32m- Pydantic-validated AI output pipeline[m
+[32m+[m[32m- OpenRouter integration with primary and fallback model support[m
+[32m+[m[32m- NASA APOD and DONKI integrations with TTL caching[m
+[32m+[m[32m- Vision AI image analysis endpoint[m
+[32m+[m[32m- Multi-turn chat endpoint[m
+[32m+[m[32m- Daily bulletin scheduler[m
+[32m+[m[32m- Next.js Arabic RTL frontend (all core pages)[m
+[32m+[m[32m- Al-Tariq static frontend (full page set, partial backend integration)[m
+[32m+[m[32m- Backend test suite[m
+ [m
+[31m----[m
+[31m-[m
+[31m-## Screenshots[m
+[32m+[m[32m### Planned / in progress[m
+ [m
+[31m-> TODO: Add final product screenshots before submission.[m
+[32m+[m[32m- Full backend integration for all `al-tariq-frontend/` pages (some currently show demo data)[m
+[32m+[m[32m- Visual polish and design refinement[m
+[32m+[m[32m- Production hardening: CORS tightening, rate limiting, authentication[m
+[32m+[m[32m- Arabic support and RTL design parity in `al-tariq-frontend/`[m
+[32m+[m[32m- Deployment infrastructure[m
+ [m
+ ---[m
+ [m
+ ## Team[m
+ [m
+[31m-**Team Name:** 404Found[m
+[31m-[m
+[31m-> TODO: Add verified team member names and roles.[m
+[32m+[m[32m- **Team Name:** [TO BE COMPLETED][m
+[32m+[m[32m- **Team Members:** [TO BE COMPLETED][m
+[32m+[m[32m- **Institution / Organization:** [TO BE COMPLETED][m
+ [m
+ ---[m
+ [m
+[31m-## License[m
+[32m+[m[32m## Challenge Information[m
+ [m
+[31m-> TODO: Add license information if required by the competition.[m
+[31m-> No LICENSE file is currently present in the repository.[m
+[32m+[m[32m- **Challenge Name:** [TO BE COMPLETED][m
+[32m+[m[32m- **Competition / Event:** [TO BE COMPLETED][m
+[32m+[m[32m- **Selected Theme:** [TO BE COMPLETED][m
+ [m
+ ---[m
+ [m
+[31m-## Competition Submission Checklist[m
+[32m+[m[32m## Submission Checklist[m
+ [m
+[31m-- [x] Working prototype (functional implementation verified)[m
+[31m-- [x] IBM Bob used as primary development tool throughout the project[m
+[32m+[m[32m- [x] Working prototype with functional backend and two frontend implementations[m
+[32m+[m[32m- [x] IBM Bob used as primary AI-assisted development environment throughout the project[m
+[32m+[m[32m- [x] Development artifacts preserved in `OUR PROMET/`[m
+ - [ ] IBM SkillsBuild learning activity completed[m
+[31m-- [ ] Public GitHub repository URL[m
+[31m-- [ ] Public demo video[m
+[32m+[m[32m- [ ] Public GitHub repository URL inserted[m
+[32m+[m[32m- [ ] Public demo video URL inserted[m
+ - [ ] Official challenge theme inserted[m
+ - [ ] Final screenshots added[m
+[31m-- [ ] Verified team member names and roles[m
+[32m+[m[32m- [ ] Team member names and roles verified[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## License[m
+[32m+[m
+[32m+[m[32m> No LICENSE file is currently present in the repository.[m
+[32m+[m[32m> Add license information as required by the competition rules before final submission.[m

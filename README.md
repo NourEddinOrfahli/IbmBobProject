@@ -625,17 +625,31 @@ Al-Tariq is currently an **MVP / prototype**. The core backend and both frontend
 
 ## Team
 
-- **Team Name:** [TO BE COMPLETED]
-- **Team Members:** [TO BE COMPLETED]
-- **Institution / Organization:** [TO BE COMPLETED]
+- **Team Name:** [404 Found]
+
+- **Team Members:** [
+Yusuf Maan Al Shikh Ahmad 
+yusufalshikhahmad@gmail.com 
+
+Nour Eddin Orfahli
+nouralden54328@gmail.com
+
+Majd Aldeen Akesh 
+akeshaldeenmjed@gmail.com
+
+Abdullah Daly
+
+]
+- **Institution / Organization:** [Ebla Private University (EPU)]
+
 
 ---
 
 ## Challenge Information
 
-- **Challenge Name:** [TO BE COMPLETED]
-- **Competition / Event:** [TO BE COMPLETED]
-- **Selected Theme:** [TO BE COMPLETED]
+- **Challenge Name:** AI Builders Challenge with IBM Bob
+- **Competition / Event:** AI Builders Challenge (August 2026)
+- **Selected Theme:** Mission Beyond Earth: Space Exploration.
 
 ---
 
@@ -644,12 +658,12 @@ Al-Tariq is currently an **MVP / prototype**. The core backend and both frontend
 - [x] Working prototype with functional backend and two frontend implementations
 - [x] IBM Bob used as primary AI-assisted development environment throughout the project
 - [x] Development artifacts preserved in `OUR PROMET/`
-- [ ] IBM SkillsBuild learning activity completed
-- [ ] Public GitHub repository URL inserted
+- [X] IBM SkillsBuild learning activity completed
+- [x] Public GitHub repository URL inserted
 - [ ] Public demo video URL inserted
-- [ ] Official challenge theme inserted
+- [x] Official challenge theme inserted
 - [ ] Final screenshots added
-- [ ] Team member names and roles verified
+- [x] Team member names and roles verified
 
 ---
 

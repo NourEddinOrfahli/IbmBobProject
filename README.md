@@ -86,8 +86,11 @@ All features listed below are implemented and present in the repository.
 | Stories archive | Paginated APOD history (`GET /api/stories`) |
 | Favorites | LocalStorage-based favorites across pages |
 | RTL Arabic interface | `<html lang="ar" dir="rtl">` in the Next.js frontend |
+| English interface | The project includes an English interface, as demonstrated in the documented application screenshots |
 | Daily bulletin scheduler | Optional APScheduler job for automated daily stories |
 | Model fallback logic | Automatic retry on rate-limit / service-unavailable errors |
+
+Al-Tariq supports both Arabic and English, making the platform accessible to a wider range of users.
 
 ### Application Routes (Next.js frontend)
 

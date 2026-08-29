@@ -14,6 +14,33 @@ The platform fetches real daily space data from NASA, generates structured Arabi
 
 ---
 
+## Screenshots
+
+![Home Dashboard](docs/screenshots/01-home-dashboard.png)
+
+![Today's Signal & Space Weather](docs/screenshots/02-todays-signal-space-weather.png)
+
+![Image Interpreter](docs/screenshots/03-image-interpreter.png)
+
+![AI Space Chat](docs/screenshots/04-ai-space-chat.png)
+
+![Cosmos Stories](docs/screenshots/05-cosmos-stories.png)
+
+![Exoplanet Catalog](docs/screenshots/06-exoplanet-catalog.png)
+
+![Interactive Pulsar Lab](docs/screenshots/07-interactive-pulsar-lab.png)
+
+![Events Calendar](docs/screenshots/08-events-calendar.png)
+
+![Mission Timeline](docs/screenshots/09-mission-timeline.png)
+
+![System Settings](docs/screenshots/10-system-settings.png)
+
+![Favorites Archive](docs/screenshots/11-favorites-archive.png)
+
+---
+
+
 ## The Problem
 
 Astronomy content is largely inaccessible to Arabic-speaking non-specialists:

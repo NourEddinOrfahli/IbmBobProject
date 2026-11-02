@@ -188,7 +188,9 @@ Both NASA calls are cached with a TTL to avoid redundant requests.
 - Chat messages are truncated server-side at 800 characters; history is capped at 20 turns.
 - API keys are never exposed to the frontend.
 - All error responses use a `{"success": false, "error": {"code": "...", "message": "..."}}` envelope; stack traces are never surfaced.
-- CORS is currently open (`allow_origins=["*"]`) for development convenience; this should be tightened before production deployment.
+- CORS defaults to `http://localhost:3000` and `http://127.0.0.1:3000`, and can
+  be configured with the comma-separated `CORS_ALLOW_ORIGINS` environment
+  variable. The canonical same-origin Node proxy does not require browser CORS.
 
 ---
 
@@ -228,7 +230,7 @@ Both NASA calls are cached with a TTL to avoid redundant requests.
 | Technology | Purpose |
 |---|---|
 | OpenRouter | AI gateway providing access to multiple models |
-| Configurable text model | Arabic story generation (default: `google/gemini-2.0-flash-exp:free` per `.env.example`) |
+| Configurable text model | Arabic story generation (default: `nvidia/nemotron-3-ultra-550b-a55b:free`) |
 | Configurable vision model | Multimodal image analysis |
 | Configurable fallback models | Automatic retry on primary model failure |
 
@@ -514,10 +516,10 @@ Create `.env` in the **project root** by copying `.env.example`. The backend rea
 |---|---|---|---|
 | `NASA_API_KEY` | Recommended | `DEMO_KEY` | NASA public API key |
 | `OPENROUTER_API_KEY` | **Yes** (AI endpoints) | _(empty)_ | OpenRouter API key |
-| `OPENROUTER_MODEL` | No | `google/gemini-2.0-flash-exp:free` | Primary text model slug |
-| `OPENROUTER_FALLBACK_MODEL` | No | `meta-llama/llama-3.3-70b-instruct:free` | Fallback text model on rate-limit / 503 |
-| `OPENROUTER_VISION_MODEL` | No | `google/gemini-2.0-flash-exp:free` | Vision model slug |
-| `OPENROUTER_VISION_FALLBACK_MODEL` | No | _(env-defined)_ | Fallback vision model |
+| `OPENROUTER_MODEL` | No | `nvidia/nemotron-3-ultra-550b-a55b:free` | Primary text model slug |
+| `OPENROUTER_FALLBACK_MODEL` | No | `nvidia/nemotron-3.5-lightning:free` | Fallback text model on rate-limit / 503 |
+| `OPENROUTER_VISION_MODEL` | No | `nvidia/nemotron-3.5-super-vl:free` | Vision model slug |
+| `OPENROUTER_VISION_FALLBACK_MODEL` | No | `minimax/minimax-m3:free` | Fallback vision model |
 | `OPENROUTER_BASE_URL` | No | `https://openrouter.ai/api/v1` | Override AI API base URL |
 | `OPENROUTER_MAX_TOKENS` | No | `2000` | Maximum output tokens |
 | `OPENROUTER_MIN_COMPLETION_TOKENS` | No | `100` | Minimum tokens to accept as a valid response |
@@ -634,7 +636,8 @@ This script verifies scheduler startup, bulletin generation, `BulletinStore` per
 - **Structured error responses.** All errors use a consistent JSON envelope. Stack traces are never surfaced to clients.
 - **Chat input limits.** User messages are truncated server-side at 800 characters; conversation history is capped at 20 turns.
 - **Image validation.** Only `image/jpeg`, `image/png`, and `image/webp` are accepted, with a 5 MB size limit enforced before any processing.
-- **CORS.** Currently open (`allow_origins=["*"]`) for development. This must be restricted to the specific frontend origin before any production deployment.
+- **CORS.** Defaults to local development origins and is configurable through
+  `CORS_ALLOW_ORIGINS`; the canonical frontend uses a same-origin proxy.
 
 ---
 

@@ -37,11 +37,6 @@ class OpenRouterConfig:
     model: str = field(
         default_factory=lambda: os.getenv(
             "OPENROUTER_MODEL",
-            # Default: nvidia/nemotron-3-ultra-550b-a55b:free
-            # Verified working on the OpenRouter free tier (live-tested 2025).
-            # DO NOT use openrouter/auto or openrouter/free — these route to
-            # safety-classifier models that return "User Safety: safe" instead
-            # of valid structured JSON responses.
             "nvidia/nemotron-3-ultra-550b-a55b:free",
         )
     )
@@ -62,8 +57,7 @@ class OpenRouterConfig:
     fallback_model: str | None = field(
         default_factory=lambda: os.getenv(
             "OPENROUTER_FALLBACK_MODEL",
-            # poolside/laguna-s-2.1:free verified working on the free tier (2025).
-            "poolside/laguna-s-2.1:free",
+            "nvidia/nemotron-3.5-lightning:free",
         ) or None
     )
     # Vision model used for image analysis (multimodal).
@@ -72,9 +66,7 @@ class OpenRouterConfig:
     vision_model: str = field(
         default_factory=lambda: os.getenv(
             "OPENROUTER_VISION_MODEL",
-            # nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free verified working
-            # for image_url vision with full structured JSON Arabic output (2025).
-            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+            "nvidia/nemotron-3.5-super-vl:free",
         )
     )
     # Fallback vision model — used when the primary vision model is rate-limited

@@ -38,6 +38,13 @@ reports `AI_NOT_CONFIGURED` when its key is absent.
 - Final `Al-Tariq-Modern-Frontend-Replit.zip` was integrity-tested, extracted
   successfully, checked for required files, and scanned for secrets and
   excluded build/history directories.
+- Release hotfix: startup now checks all runtime imports, tracks and cleans up
+  both service processes, and synchronizes the configured free OpenRouter model
+  IDs across code, environment template, and documentation.
+- Hotfix validation: all required Python imports passed; targeted prompt/provider
+  tests passed (`90 passed`); FastAPI health, static delivery, same-origin
+  weather proxy, AI configuration error handling, language switching, and
+  process cleanup all passed without inference requests.
 
 ## Limitations
 

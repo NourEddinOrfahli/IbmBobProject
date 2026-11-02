@@ -4,9 +4,9 @@
 
 > **MVP / Prototype — actively evolving**
 
-> **Canonical frontend:** `frontend/` (Next.js, Arabic RTL). The older
-> `al-tariq-frontend/` static app is retained as legacy reference material and
-> is not part of the default run path.
+> **Canonical frontend:** `al-tariq-frontend/` (zero-build static Node app,
+> bilingual AR/EN). The Next.js implementation in `frontend/` is preserved as
+> a secondary implementation and is not started by default.
 
 ---
 
@@ -68,7 +68,8 @@ The implemented system provides:
 - **Conversational space AI chat** — multi-turn Arabic conversation about astronomy topics, with optional image context.
 - **Image upload and Vision AI analysis** — users upload any space image; the backend sends it to a multimodal vision model and returns a structured Arabic interpretation (title, summary, observations, scientific explanation, confidence level, and an answer to the user's specific question).
 - **NASA stories archive** — paginated browsing of past APOD entries.
-- **A fully RTL Arabic interface** in the Next.js frontend, and a modern English LTR space-themed interface in the static al-tariq-frontend.
+- **A bilingual Arabic/English interface** in the canonical static frontend,
+  with persisted language choice and automatic RTL/LTR direction.
 
 All AI and NASA API calls are made server-side. No API keys are ever exposed to the browser.
 
@@ -96,7 +97,7 @@ All features listed below are implemented and present in the repository.
 
 Al-Tariq supports both Arabic and English, making the platform accessible to a wider range of users.
 
-### Application Routes (Next.js frontend)
+### Application Routes (secondary Next.js frontend)
 
 | Route | Page |
 |---|---|
@@ -106,7 +107,7 @@ Al-Tariq supports both Arabic and English, making the platform accessible to a w
 | `/stories` | NASA stories archive |
 | `/favorites` | Saved favorites |
 
-### Application Pages (al-tariq-frontend static)
+### Application Pages (canonical al-tariq-frontend static)
 
 | Page | Description |
 |---|---|
@@ -130,7 +131,7 @@ Al-Tariq supports both Arabic and English, making the platform accessible to a w
 ```
 User
  ↓
-Frontend (Next.js or al-tariq-frontend static)
+Frontend (canonical al-tariq-frontend static)
  ↓
 FastAPI Backend (Python) — port 8000
  ┌────────────────────────┬────────────────────────┐
@@ -321,10 +322,9 @@ Both NASA calls are cached with a TTL to avoid redundant requests.
 │   ├── styles.css                 # Shared design system and responsive layout
 │   ├── app.js                     # Starfield, i18n, navigation, shared interactions
 │   ├── api.js                     # Centralised API client for the FastAPI backend
-│   ├── config.js                  # Backend URL configuration (default: localhost:8000)
-│   ├── server.js                  # Zero-dependency Node.js static file server
+│   ├── config.js                  # Same-origin browser API configuration
+│   ├── server.js                  # Static server + FastAPI proxy
 │   └── package.json               # `npm start` shortcut
-├── OUR PROMET/                    # IBM Bob development artifacts (see below)
 ├── requirements.txt               # Python dependencies
 ├── pytest.ini                     # pytest configuration
 ├── .env.example                   # Backend environment variable template
@@ -336,13 +336,16 @@ Both NASA calls are cached with a TTL to avoid redundant requests.
 
 ## Frontend Implementations
 
-This repository currently contains **two frontend implementations**. This is intentional and reflects the project's current MVP stage.
+This repository contains two frontend implementations. The static bilingual
+application is the production default; Next.js is preserved as a secondary
+implementation for its typed component/test suite.
 
 ### 1. `frontend/` — Next.js TypeScript application
 
 The original frontend implementation built with Next.js 14, React, TypeScript, and Tailwind CSS. It provides a fully RTL Arabic-language interface covering all core features: the home dashboard, image interpreter, AI chat, stories archive, and favorites. It also includes a full Jest + React Testing Library test suite.
 
-**Use this frontend if you want:** the complete Arabic RTL experience, TypeScript type safety, or to run the frontend test suite.
+**Use this frontend if you want:** the secondary typed component experience or
+to run the frontend test suite.
 
 ```bash
 # From the frontend/ directory
@@ -352,11 +355,19 @@ npm run dev
 # → http://localhost:3000
 ```
 
-### 2. `al-tariq-frontend/` — Static HTML/CSS/JS application
+### 2. `al-tariq-frontend/` — Canonical Static HTML/CSS/JS Application
 
-A newer static frontend implementation designed specifically for the Al-Tariq experience. It is built with vanilla HTML, CSS, and JavaScript — zero build tooling required. It uses a modern English LTR space-themed design with a rich set of pages including exoplanets, weather, pulsar lab, calendar, and mission timeline — pages not yet present in the Next.js frontend.
+A modern bilingual frontend designed specifically for the Al-Tariq experience.
+It is built with vanilla HTML, CSS, and JavaScript — zero build tooling
+required — and includes the full page set: exoplanets, weather, pulsar lab,
+calendar, mission timeline, observatory, settings, stories, chat, and image
+interpreter.
 
-The static frontend communicates with the same FastAPI backend through `api.js`, which reads the backend URL from `config.js` (default: `http://localhost:8000`). At the current MVP stage, some pages use placeholder/demo data; integration with real backend endpoints is in progress.
+The static frontend communicates with the same FastAPI backend through the
+same-origin proxy in `server.js`. Browser requests use relative `/api/*` and
+`/health` paths; no browser-facing `localhost:8000` URL or secret is required.
+Some exploratory pages intentionally contain clearly styled simulation/demo
+content, while NASA-backed pages use the real API responses.
 
 **This is the intended direction for the project's future final production interface.**
 
@@ -375,11 +386,11 @@ npm start
 | Aspect | `frontend/` (Next.js) | `al-tariq-frontend/` (Static) |
 |---|---|---|
 | Technology | Next.js 14 / React / TypeScript | Vanilla HTML / CSS / JavaScript |
-| Language / direction | Arabic RTL | English LTR |
+| Language / direction | Arabic RTL | Arabic RTL / English LTR |
 | Backend integration | Fully integrated | Core pages integrated; some pages use demo data |
 | Test suite | Jest + RTL (see Testing) | None |
 | Build required | Yes (`npm install`) | No (`npm start` only) |
-| Future direction | Maintained | **Primary direction** |
+| Default production runtime | No | **Yes** |
 
 ---
 
@@ -428,7 +439,7 @@ Interactive API docs (Swagger UI): `http://localhost:8000/docs`
 
 ---
 
-### Step 2A — Al-Tariq Static Frontend (recommended for demonstration)
+### Step 2A — Al-Tariq Static Frontend (default and recommended)
 
 ```bash
 # From the al-tariq-frontend/ directory
@@ -441,7 +452,7 @@ No `npm install` step is needed — this frontend has zero npm dependencies.
 
 ---
 
-### Step 2B — Next.js Frontend (full Arabic RTL experience)
+### Step 2B — Next.js Frontend (secondary implementation)
 
 ```bash
 # From the frontend/ directory
@@ -541,6 +552,13 @@ Create `.env` in the **project root** by copying `.env.example`. The backend rea
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `NEXT_PUBLIC_API_URL` | No | `http://localhost:8000` | Backend server base URL |
+
+### Canonical static frontend
+
+The default `al-tariq-frontend/server.js` uses same-origin relative URLs.
+`AL_TARIQ_API_URL` is optional and should only be set when intentionally
+deploying the static frontend separately from FastAPI. `BACKEND_HOST`,
+`BACKEND_PORT`, and `PORT` configure the local proxy/server process.
 
 > **Security note:** `NASA_API_KEY` and `OPENROUTER_API_KEY` must be stored in the backend `.env` file only. Never add them to any frontend environment file. All AI and NASA calls are made exclusively by the Python backend.
 

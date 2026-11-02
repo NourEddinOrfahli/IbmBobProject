@@ -5,13 +5,13 @@
  * No NASA or OpenRouter keys are used here — everything stays server-side.
  *
  * Backend base URL comes from config.js (window.AL_TARIQ_API_URL).
- * Default: http://localhost:8000
+ * The default is empty, so browser requests remain same-origin.
  */
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 
 function _base() {
-  return (window.AL_TARIQ_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+  return (window.AL_TARIQ_API_URL || '').replace(/\/$/, '');
 }
 
 /**

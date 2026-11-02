@@ -191,7 +191,7 @@
 
 // Show backend URL in error card
 document.getElementById('backend-url-display').textContent =
-  window.AL_TARIQ_API_URL || 'http://localhost:8000';
+  window.AL_TARIQ_API_URL || 'same-origin proxy';
 
 // Date in topbar
 const now = new Date();
@@ -223,7 +223,7 @@ async function loadBulletin() {
   } catch (err) {
     hide('bulletin-loading');
     document.getElementById('bulletin-error-msg').textContent =
-      err.message || 'Could not load today's bulletin.';
+      err.message || "Could not load today's bulletin.";
     show('bulletin-error');
     document.getElementById('system-status-label').textContent = t('BACKEND OFFLINE');
     return;

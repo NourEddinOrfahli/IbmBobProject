@@ -28,7 +28,7 @@ function getApiBase(): string {
   const base =
     (typeof process !== 'undefined' &&
       process.env.NEXT_PUBLIC_API_URL) ||
-    'http://localhost:8000';
+    '/backend-api';
   return base.replace(/\/$/, '');
 }
 

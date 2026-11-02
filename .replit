@@ -1,0 +1,10 @@
+entrypoint = "scripts/start-replit.sh"
+run = "bash scripts/start-replit.sh"
+
+[deployment]
+run = ["bash", "scripts/start-replit.sh"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 3000
+externalPort = 80

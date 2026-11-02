@@ -33,11 +33,8 @@ from prompts import build_retry_user_prompt, RETRY_SYSTEM_PROMPT
 # Vision-capable model to use for image analysis.
 # Uses a free, multimodal-capable model on OpenRouter.
 # NOTE: this module-level constant is superseded by config.openrouter.vision_model
-# (loaded from OPENROUTER_VISION_MODEL env var).  Kept only for reference.
-# nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free is verified working for
-# structured JSON vision output.  minimax/minimax-m3:free only returns 13-char
-# stub JSON for complex prompts.
-_VISION_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+# (loaded from OPENROUTER_VISION_MODEL env var). Kept only for compatibility.
+_VISION_MODEL = "nvidia/nemotron-3.5-super-vl:free"
 
 logger = logging.getLogger(__name__)
 
@@ -109,9 +106,9 @@ class OpenRouterProvider(AIProvider):
         """
         Send a chat-completion request to OpenRouter and return parsed JSON.
 
-        - Tries the primary model (OPENROUTER_MODEL, default: meta-llama/llama-3.3-70b-instruct:free).
+        - Tries the primary model (OPENROUTER_MODEL).
         - On permanent primary failure (rate-limit / unavailable), automatically
-          retries with the fallback model (OPENROUTER_FALLBACK_MODEL, default: qwen/qwen-2.5-coder-32b-instruct:free).
+          retries with OPENROUTER_FALLBACK_MODEL when configured.
         - Logs finish_reason for every response (helps diagnose truncation).
         - If finish_reason == "length", retries with a shorter prompt.
         - On JSON parse failure, performs ONE retry with a shorter prompt.

@@ -4,6 +4,10 @@
 
 > **MVP / Prototype — actively evolving**
 
+> **Canonical frontend:** `frontend/` (Next.js, Arabic RTL). The older
+> `al-tariq-frontend/` static app is retained as legacy reference material and
+> is not part of the default run path.
+
 ---
 
 ## Project Overview

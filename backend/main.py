@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import os
 import sys
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Optional
@@ -139,7 +140,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ALLOW_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:3000",
+        ).split(",")
+        if origin.strip()
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )

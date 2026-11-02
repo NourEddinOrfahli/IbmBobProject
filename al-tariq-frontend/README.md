@@ -1,6 +1,6 @@
 # Al-Tariq — Space Interpreter
 
-Static frontend handoff for the 2026 astronomy experience.
+Canonical bilingual frontend for the 2026 astronomy experience.
 
 ## Included
 
@@ -16,7 +16,7 @@ Static frontend handoff for the 2026 astronomy experience.
 - `settings.html` — system settings and API proxy placeholder
 - `styles.css` — shared cosmic design system and responsive layout
 - `app.js` — demo interactions and localStorage favorites
-- `server.js` — zero-dependency local static server
+- `server.js` — zero-dependency static server and same-origin FastAPI proxy
 - `package.json` — `npm start` shortcut
 
 ## Run locally
@@ -34,11 +34,14 @@ recommended because it behaves more like a real frontend deployment.
 
 ## Frontend integration notes
 
-This is intentionally a frontend-only handoff. Replace the demo data and `setTimeout` handlers later with the documented backend calls:
+The primary pages use the existing FastAPI backend through same-origin
+relative requests. Exploratory simulation pages intentionally retain their
+local demo data and do not claim to be live NASA observations.
 
 - `GET /api/daily-news`
 - `GET /api/stories`
 - `POST /api/chat`
 - `POST /api/analyze-image`
 
-NASA and OpenRouter credentials must remain server-side. The UI is English LTR by design, with no client-side API keys.
+NASA and OpenRouter credentials remain server-side. The AR/EN switcher is
+persisted in `localStorage` and updates page direction between RTL and LTR.
